@@ -122,6 +122,32 @@ const routes = function(app){
   // 活动地点删除
   app.delete("/admin/api/deletePlace",controller.deletePlace)
 
+  // 题目添加
+  app.post("/admin/api/addPractice",controller.addPractice)
+  // 题目修改
+  app.post("/admin/api/updatePractice",controller.updatePractice)
+  // 题目查询
+  app.get("/admin/api/findPractices",controller.findPractices)
+  // 题目删除
+  app.delete("/admin/api/deletePractice",controller.deletePractice)
+
+  // 礼物添加
+  app.post("/admin/api/addGift",controller.addGift)
+  // 礼物修改
+  app.post("/admin/api/updateGift",controller.updateGift)
+  // 礼物查询
+  app.get("/admin/api/findGifts",controller.findGifts)
+  // 礼物删除
+  app.delete("/admin/api/deleteGift",controller.deleteGift)
+
+  // 评论添加
+  app.post("/admin/api/addComment",controller.addComment)
+  // 评论修改
+  app.post("/admin/api/updateComment",controller.updateComment)
+  // 评论查询
+  app.get("/admin/api/findComments",controller.findComments)
+  // 评论删除
+  app.delete("/admin/api/deleteComment",controller.deleteComment)
 }
 
 module.exports = routes

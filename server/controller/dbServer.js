@@ -104,7 +104,7 @@ exports.findManagers = async (req,res) => {
 // 管理员删除(超级管理员不允许删除)
 exports.deleteManager = async (req,res) => {
   const { type,id } = req.body
-  if(!id){
+  if([null,undefined].includes(id) || typeof id !== 'number'){
     return res.send({
       message:"id必传"
     })
@@ -168,7 +168,7 @@ exports.addPower = async (req,res) => {
 exports.updatePower = async (req,res) => {
   const data = req.body
   let {name,type,powerName,id} = data
-  if(!id){
+  if([null,undefined].includes(id) || typeof id !== 'number'){
     return res.send({
       message: "id字段必传",
     });
@@ -207,7 +207,7 @@ exports.findPowers = async (req,res) => {
 // 权限删除
 exports.deletePower = async (req,res) => {
   const { id } = req.body
-  if(!id){
+  if([null,undefined].includes(id) || typeof id !== 'number'){
     return res.send({
       message:"id必传"
     })
@@ -251,7 +251,7 @@ exports.addRole = async (req,res) => {
 exports.updateRole = async (req,res) => {
   const data = req.body
   let {name,introduce,request,id} = data
-  if(!id){
+  if([null,undefined].includes(id) || typeof id !== 'number'){
     return res.send({
       message: "id字段必传",
     });
@@ -290,7 +290,7 @@ exports.findRoles = async (req,res) => {
 // 角色删除
 exports.deleteRole = async (req,res) => {
   const { id } = req.body
-  if(!id){
+  if([null,undefined].includes(id) || typeof id !== 'number'){
     return res.send({
       message:"id必传"
     })
@@ -334,7 +334,7 @@ exports.addOrganization = async (req,res) => {
 exports.updateOrganization = async (req,res) => {
   const data = req.body
   let {name,introduce,id} = data
-  if(!id){
+  if([null,undefined].includes(id) || typeof id !== 'number'){
     return res.send({
       message: "id字段必传",
     });
@@ -373,7 +373,7 @@ exports.findOrganizations = async (req,res) => {
 // 组织删除
 exports.deleteOrganization = async (req,res) => {
   const { id } = req.body
-  if(!id){
+  if([null,undefined].includes(id) || typeof id !== 'number'){
     return res.send({
       message:"id必传"
     })
@@ -417,7 +417,7 @@ exports.addFaculty = async (req,res) => {
 exports.updateFaculty = async (req,res) => {
   const data = req.body
   let {name,id} = data
-  if(!id){
+  if([null,undefined].includes(id) || typeof id !== 'number'){
     return res.send({
       message: "id字段必传",
     });
@@ -454,7 +454,7 @@ exports.findFaculties = async (req,res) => {
 // 学院删除
 exports.deleteFaculty = async (req,res) => {
   const { id } = req.body
-  if(!id){
+  if([null,undefined].includes(id) || typeof id !== 'number'){
     return res.send({
       message:"id必传"
     })
@@ -498,7 +498,7 @@ exports.addSchool = async (req,res) => {
 exports.updateSchool = async (req,res) => {
   const data = req.body
   let {name,logo,id} = data
-  if(!id){
+  if([null,undefined].includes(id) || typeof id !== 'number'){
     return res.send({
       message: "id字段必传",
     });
@@ -536,7 +536,7 @@ exports.findSchools = async (req,res) => {
 // 学校删除
 exports.deleteSchool = async (req,res) => {
   const { id } = req.body
-  if(!id){
+  if([null,undefined].includes(id) || typeof id !== 'number'){
     return res.send({
       message:"id必传"
     })
@@ -597,7 +597,7 @@ exports.updateClass = async (req,res) => {
   const data = req.body
   let {name,title,classData,facultyId,id} = data
   classData = JSON.stringify(classData)
-  if(!id){
+  if([null,undefined].includes(id) || typeof id !== 'number'){
     return res.send({
       message: "id字段必传",
     });
@@ -637,7 +637,7 @@ exports.findClasses = async (req,res) => {
 // 专业班级删除
 exports.deleteClass = async (req,res) => {
   const { id } = req.body
-  if(!id){
+  if([null,undefined].includes(id) || typeof id !== 'number'){
     return res.send({
       message:"id必传"
     })
@@ -658,7 +658,7 @@ exports.deleteClass = async (req,res) => {
 // 用户添加
 exports.addUser = async (req,res) => {
   const data = req.body
-  let {type,name,avatar,powerId,organizationId,facultyId,schoolId,classId,className,cardId,phone,score} = data
+  let {type,name,avatar,powerId,organizationId,facultyId,schoolId,classId,className,cardId,phone,score,address} = data
   powerId = JSON.stringify(powerId)
   score = score ?? 0
   if (!type) {
@@ -707,7 +707,7 @@ exports.addUser = async (req,res) => {
         message:"数据已存在，请重新选择"
       })
   }
-  const result = await dbModel.addUser(1,[type,name,avatar,powerId,organizationId,facultyId,schoolId,classId,className,cardId,phone,score])
+  const result = await dbModel.addUser(1,[type,name,avatar,powerId,organizationId,facultyId,schoolId,classId,className,cardId,phone,score,address])
   res.send({
     code:200,
     message:'添加成功'
@@ -717,9 +717,9 @@ exports.addUser = async (req,res) => {
 // 用户修改
 exports.updateUser = async (req,res) => {
   const data = req.body
-  let {type,name,avatar,powerId,organizationId,facultyId,schoolId,classId,className,cardId,phone,score,id} = data
+  let {type,name,avatar,powerId,organizationId,facultyId,schoolId,classId,className,cardId,phone,score,address,id} = data
   powerId = JSON.stringify(powerId)
-  if(!id){
+  if([null,undefined].includes(id) || typeof id !== 'number'){
     return res.send({
       message: "id字段必传",
     });
@@ -742,7 +742,8 @@ exports.updateUser = async (req,res) => {
   cardId = cardId ?? originData[0].cardId
   phone = phone ?? originData[0].phone
   score = score ?? originData[0].score
-  const result = await dbModel.updateUser(1,[type,name,avatar,powerId,organizationId,facultyId,schoolId,classId,className,cardId,phone,score,id])
+  address = address ?? originData[0].address
+  const result = await dbModel.updateUser(1,[type,name,avatar,powerId,organizationId,facultyId,schoolId,classId,className,cardId,phone,score,address,id])
   res.send({
     code:200,
     message:'修改成功'
@@ -766,7 +767,7 @@ exports.findUsers = async (req,res) => {
 // 用户删除
 exports.deleteUser = async (req,res) => {
   const { id } = req.body
-  if(!id){
+  if([null,undefined].includes(id) || typeof id !== 'number'){
     return res.send({
       message:"id必传"
     })
@@ -822,7 +823,7 @@ exports.updateArticle = async (req,res) => {
   const data = req.body
   let {title,type,body,supportUser,id} = data
   supportUser = JSON.stringify(supportUser)
-  if(!id){
+  if([null,undefined].includes(id) || typeof id !== 'number'){
     return res.send({
       message: "id字段必传",
     });
@@ -862,7 +863,7 @@ exports.findArticles = async (req,res) => {
 // 文章删除
 exports.deleteArticle = async (req,res) => {
   const { id } = req.body
-  if(!id){
+  if([null,undefined].includes(id) || typeof id !== 'number'){
     return res.send({
       message:"id必传"
     })
@@ -923,7 +924,7 @@ exports.updateVedio = async (req,res) => {
   const data = req.body
   let {title,type,body,vedio,supportUser,id} = data
   supportUser = JSON.stringify(supportUser)
-  if(!id){
+  if([null,undefined].includes(id) || typeof id !== 'number'){
     return res.send({
       message: "id字段必传",
     });
@@ -964,7 +965,7 @@ exports.findVedioes = async (req,res) => {
 // 视频删除
 exports.deleteVedio = async (req,res) => {
   const { id } = req.body
-  if(!id){
+  if([null,undefined].includes(id) || typeof id !== 'number'){
     return res.send({
       message:"id必传"
     })
@@ -1029,7 +1030,7 @@ exports.updateActive = async (req,res) => {
   let {name,placeId,body,userId,supportUser,joinUser,score,isPass,id} = data
   supportUser = JSON.stringify(supportUser)
   joinUser = JSON.stringify(joinUser)
-  if(!id){
+  if([null,undefined].includes(id) || typeof id !== 'number'){
     return res.send({
       message: "id字段必传",
     });
@@ -1073,7 +1074,7 @@ exports.findActives = async (req,res) => {
 // 活动删除
 exports.deleteActive = async (req,res) => {
   const { id } = req.body
-  if(!id){
+  if([null,undefined].includes(id) || typeof id !== 'number'){
     return res.send({
       message:"id必传"
     })
@@ -1123,7 +1124,7 @@ exports.addPlace = async (req,res) => {
 exports.updatePlace = async (req,res) => {
   const data = req.body
   let {name,status,volume,id} = data
-  if(!id){
+  if([null,undefined].includes(id) || typeof id !== 'number'){
     return res.send({
       message: "id字段必传",
     });
@@ -1162,7 +1163,7 @@ exports.findPlaces = async (req,res) => {
 // 活动地点删除
 exports.deletePlace = async (req,res) => {
   const { id } = req.body
-  if(!id){
+  if([null,undefined].includes(id) || typeof id !== 'number'){
     return res.send({
       message:"id必传"
     })
@@ -1174,6 +1175,352 @@ exports.deletePlace = async (req,res) => {
     })
   }
   const result = await dbModel.deletePlace(1,id)
+  res.send({
+      code:200,
+      message:"删除成功"
+  })
+}
+
+// 题目添加
+exports.addPractice = async (req,res) => {
+  const data = req.body
+  let {content,options,answer} = data
+  if (!content) {
+    return res.send({
+      message: "content字段（题目内容）必传",
+    });
+  }
+  if (!Array.isArray(options) || options.length === 0) {
+    return res.send({
+      message: "options字段（题目选项（Array））必传",
+    });
+  }
+  if (!Array.isArray(answer) || answer.length === 0) {
+    return res.send({
+      message: "answer字段（答案（Array））必传",
+    });
+  }
+  const isDiff = answer.some(item=>{
+    let count = 0
+    options.forEach(option=>{
+      if(option === item){
+        count++
+      }
+    })
+    return count === 0
+  })
+  if(isDiff){
+    return res.send({
+      message: "请确保答案是否在题目选项中存在",
+    });
+  }
+  const type = answer.length > 1 ? 1 : 0
+  options = JSON.stringify(options)
+  answer = JSON.stringify(answer)
+  const practicesCount = await dbModel.addPractice(2,[content])
+  if(practicesCount[0].count){
+      return res.send({
+        message:"数据已存在，请重新选择"
+      })
+  }
+  const result = await dbModel.addPractice(1,[content,options,answer,type])
+  res.send({
+    code:200,
+    message:'添加成功'
+  })
+}
+
+// 题目修改
+exports.updatePractice = async (req,res) => {
+  const data = req.body
+  let {content,options,answer,id} = data
+  let type
+  if([null,undefined].includes(id) || typeof id !== 'number'){
+    return res.send({
+      message: "id字段必传",
+    });
+  }
+  if(![undefined,null].includes(options) && (!Array.isArray(options) || options.length ===0)){
+    return res.send({
+      message: "options参数必须为Array且不为空",
+    });
+  }
+  if(![undefined,null].includes(answer)){
+    if((!Array.isArray(answer) || answer.length === 0)){
+      return res.send({
+        message: "answer参数必须为Array且不为空",
+      });
+    } 
+    const isDiff = answer.some(item=>{
+      let count = 0
+      options.forEach(option=>{
+        if(option === item){
+          count++
+        }
+      })
+      return count === 0
+    })
+    if(isDiff){
+      return res.send({
+        message: "请确保答案是否在题目选项中存在",
+      });
+    }
+  }
+  const count = await dbModel.updatePractice(2,[id])
+  if(!count[0].count){
+    return res.send({
+      message:"数据不存在，修改失败"
+    })
+  }
+  if(answer){
+    type = answer.length > 1 ? 1 : 0
+  }
+  options = JSON.stringify(options)
+  answer = JSON.stringify(answer)
+  const originData = await dbModel.updatePractice(3,[id])
+  content = content ?? originData[0].content
+  options = options ?? originData[0].options
+  answer = answer ?? originData[0].answer
+  type = type ?? originData[0].type
+  const result = await dbModel.updatePractice(1,[content,options,answer,type,id])
+  res.send({
+    code:200,
+    message:'修改成功'
+  })
+}
+
+// 题目查询
+exports.findPractices = async (req,res) => {
+  const params = req.query
+  let {page,pageSize} = params
+  page = page ?? 1
+  pageSize = pageSize ?? 10
+  const result = await dbModel.findPractices(page,pageSize)
+  if(result.length > 0){
+    result.forEach(item=>{
+      item.options = JSON.parse(item.options)
+      item.answer = JSON.parse(item.answer)
+    })
+  }
+  res.send({
+    code:200,
+    message:"查询成功",
+    data:result
+  })
+}
+
+// 题目删除
+exports.deletePractice = async (req,res) => {
+  const { id } = req.body
+  if([null,undefined].includes(id) || typeof id !== 'number'){
+    return res.send({
+      message:"id必传"
+    })
+  }
+  const count =  await dbModel.deletePractice(2,id)
+  if(!count[0].count){
+    return res.send({
+      message:"数据不存在，删除失败"
+    })
+  }
+  const result = await dbModel.deletePractice(1,id)
+  res.send({
+      code:200,
+      message:"删除成功"
+  })
+}
+
+// 礼物添加
+exports.addGift = async (req,res) => {
+  const data = req.body
+  let {name,image,score,total} = data
+  if (!name) {
+    return res.send({
+      message: "name字段（礼物名称）必传",
+    });
+  }
+  if ([null,undefined].includes(score) || typeof score !== 'number') {
+    return res.send({
+      message: "score字段（所需兑换积分值）必传",
+    });
+  }
+  if ([null,undefined].includes(total) || typeof total !== 'number') {
+    return res.send({
+      message: "total字段（库存数量）必传",
+    });
+  }
+  const giftsCount = await dbModel.addGift(2,[name])
+  if(giftsCount[0].count){
+      return res.send({
+        message:"数据已存在，请重新选择"
+      })
+  }
+  const result = await dbModel.addGift(1,[name,image,score,total])
+  res.send({
+    code:200,
+    message:'添加成功'
+  })
+}
+
+// 礼物修改
+exports.updateGift = async (req,res) => {
+  const data = req.body
+  let {name,image,score,total,id} = data
+  if([null,undefined].includes(id) || typeof id !== 'number'){
+    return res.send({
+      message: "id字段必传",
+    });
+  }
+  const count = await dbModel.updateGift(2,[id])
+  if(!count[0].count){
+    return res.send({
+      message:"数据不存在，修改失败"
+    })
+  }
+  const originData = await dbModel.updateGift(3,[id])
+  name = name ?? originData[0].name
+  image = image ?? originData[0].image
+  score = score ?? originData[0].score
+  total = total ?? originData[0].total
+  const result = await dbModel.updateGift(1,[name,image,score,total,id])
+  res.send({
+    code:200,
+    message:'修改成功'
+  })
+}
+
+// 礼物查询
+exports.findGifts = async (req,res) => {
+  const params = req.query
+  let {page,pageSize} = params
+  page = page ?? 1
+  pageSize = pageSize ?? 10
+  const result = await dbModel.findGifts(page,pageSize)
+  res.send({
+    code:200,
+    message:"查询成功",
+    data:result
+  })
+}
+
+// 礼物删除
+exports.deleteGift = async (req,res) => {
+  const { id } = req.body
+  if([null,undefined].includes(id) || typeof id !== 'number'){
+    return res.send({
+      message:"id必传"
+    })
+  }
+  const count =  await dbModel.deleteGift(2,id)
+  if(!count[0].count){
+    return res.send({
+      message:"数据不存在，删除失败"
+    })
+  }
+  const result = await dbModel.deleteGift(1,id)
+  res.send({
+      code:200,
+      message:"删除成功"
+  })
+}
+
+// 评论添加
+exports.addComment = async (req,res) => {
+  const data = req.body
+  let {content,commentType,userId,fatherId} = data
+  let status = 0
+  let moment = new Date().getTime()
+  if (!content) {
+    return res.send({
+      message: "content字段（评论内容）必传",
+    });
+  }
+  if (![0,1,2].includes(commentType)) {
+    return res.send({
+      message: "commentType字段（0文章1视频2活动）必传",
+    });
+  }
+  if ([null,undefined].includes(userId) || typeof userId !== 'number') {
+    return res.send({
+      message: "userId字段（评论者id）必传",
+    });
+  }
+  if ([null,undefined].includes(fatherId) || typeof fatherId !== 'number') {
+    return res.send({
+      message: "fatherId字段（文章||视频||活动id）必传",
+    });
+  }
+  const commentsCount = await dbModel.addComment(2,[content])
+  if(commentsCount[0].count){
+      return res.send({
+        message:"数据已存在，请重新选择"
+      })
+  }
+  const result = await dbModel.addComment(1,[content,commentType,userId,fatherId,status,moment])
+  res.send({
+    code:200,
+    message:'添加成功'
+  })
+}
+
+// 评论修改
+exports.updateComment = async (req,res) => {
+  const data = req.body
+  let {content,commentType,userId,fatherId,status,id} = data
+  let moment = new Date().getTime()
+  if([null,undefined].includes(id) || typeof id !== 'number'){
+    return res.send({
+      message: "id字段必传",
+    });
+  }
+  const count = await dbModel.updateComment(2,[id])
+  if(!count[0].count){
+    return res.send({
+      message:"数据不存在，修改失败"
+    })
+  }
+  const originData = await dbModel.updateComment(3,[id])
+  content = content ?? originData[0].content
+  commentType = commentType ?? originData[0].commentType
+  userId = userId ?? originData[0].userId
+  fatherId = fatherId ?? originData[0].fatherId
+  status = status ?? originData[0].status
+  const result = await dbModel.updateComment(1,[content,commentType,userId,fatherId,status,moment,id])
+  res.send({
+    code:200,
+    message:'修改成功'
+  })
+}
+
+// 评论查询
+exports.findComments = async (req,res) => {
+  const params = req.query
+  let {page,pageSize} = params
+  page = page ?? 1
+  pageSize = pageSize ?? 10
+  const result = await dbModel.findComments(page,pageSize)
+  res.send({
+    code:200,
+    message:"查询成功",
+    data:result
+  })
+}
+
+// 评论删除
+exports.deleteComment = async (req,res) => {
+  const { id } = req.body
+  if([null,undefined].includes(id) || typeof id !== 'number'){
+    return res.send({
+      message:"id必传"
+    })
+  }
+  const count =  await dbModel.deleteComment(2,id)
+  if(!count[0].count){
+    return res.send({
+      message:"数据不存在，删除失败"
+    })
+  }
+  const result = await dbModel.deleteComment(1,id)
   res.send({
       code:200,
       message:"删除成功"

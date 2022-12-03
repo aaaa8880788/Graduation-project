@@ -446,7 +446,7 @@ multer@^1.4.5-lts.1:
 
 mysql@^2.18.1:
   version "2.18.1"
-  resolved "https://registry.npmmirror.com/mysql/-/mysql-2.18.1.tgz#2254143855c5a8c73825e4522baf2ea021766717"
+  resolved "https://registry.yarnpkg.com/mysql/-/mysql-2.18.1.tgz#2254143855c5a8c73825e4522baf2ea021766717"
   integrity sha512-Bca+gk2YWmqp2Uf6k5NFEurwY/0td0cpebAucFpY/3jhrwrVGuxU2uQFCHjU19SJfje0yQvi+rVWdq78hR5lig==
   dependencies:
     bignumber.js "9.0.0"

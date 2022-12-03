@@ -130,7 +130,8 @@ let users = `create table if not exists users(
   className INT NOT NULL COMMENT '班级如：192',
   cardId VARCHAR(1000) NOT NULL COMMENT '学号、工号',
   phone VARCHAR(1000) NOT NULL COMMENT '手机号',
-  score INT COMMENT '积分值',
+  score INT NOT NULL COMMENT '积分值',
+  address VARCHAR(1000) COMMENT '收货地址',
   PRIMARY KEY (id) 
 )`
 
@@ -169,7 +170,7 @@ let actives = `create table if not exists actives(
   PRIMARY KEY (id) 
 )`
 
-// 活动地点列表
+// 地点列表
 let places = `create table if not exists places(
   id INT NOT NULL AUTO_INCREMENT,
   name VARCHAR(100) NOT NULL COMMENT '活动地点',
@@ -177,6 +178,52 @@ let places = `create table if not exists places(
   volume INT NOT NULL COMMENT '容纳人数',
   PRIMARY KEY (id) 
 )`
+
+// 题目列表
+let practices = `create table if not exists practices(
+  id INT NOT NULL AUTO_INCREMENT,
+  content VARCHAR(1000) NOT NULL COMMENT '题目内容',
+  options VARCHAR(1000) NOT NULL COMMENT '题目选项（Array）',
+  answer VARCHAR(1000) NOT NULL COMMENT '答案（Array）',
+  type INT NOT NULL COMMENT '0单选1多选',
+  PRIMARY KEY (id) 
+)`
+
+// 礼物列表
+let gifts = `create table if not exists gifts(
+  id INT NOT NULL AUTO_INCREMENT,
+  name VARCHAR(100) NOT NULL COMMENT '礼物名称',
+  image VARCHAR(1000) COMMENT '礼物图片',
+  score INT NOT NULL COMMENT '所需兑换积分值',
+  total INT NOT NULL COMMENT '库存数量',
+  PRIMARY KEY (id) 
+)`
+
+// 评论列表
+let comments = `create table if not exists comments(
+  id INT NOT NULL AUTO_INCREMENT,
+  content VARCHAR(1000) NOT NULL COMMENT '评论内容',
+  commentType INT NOT NULL COMMENT '0文章1视频2活动',
+  userId INT NOT NULL COMMENT '评论者id',
+  fatherId INT NOT NULL COMMENT '文章||视频||活动id',
+  status INT NOT NULL COMMENT '0审核不通过1审核通过',
+  moment varchar(100) NOT NULL COMMENT '评论时间',
+  PRIMARY KEY (id) 
+)`
+
+// TODO
+// 反馈列表
+let feedbacks = `create table if not exists feedbacks(
+  id INT NOT NULL AUTO_INCREMENT,
+  commentId INT NOT NULL COMMENT '评论id',
+  userId VARCHAR(1000) NOT NULL COMMENT '评论反馈者数组id',
+  type INT NOT NULL COMMENT '0喜欢1不喜欢',
+  moment varchar(100) NOT NULL COMMENT '反馈时间',
+  PRIMARY KEY (id) 
+)`
+
+// TODO
+// 订单列表
 
 // 创建数据表函数
 let createTable = (sql)=>{
@@ -198,6 +245,9 @@ async function create(){
   createTable(vedioes)
   createTable(actives)
   createTable(places)
+  createTable(practices)
+  createTable(gifts)
+  createTable(comments)
 }
 create()
 
@@ -495,7 +545,7 @@ exports.deleteClass = (type,id) => {
 // 用户添加
 exports.addUser = (type,value) => {
   if(type === 1){
-    const _sql = "insert into users set type=?,name=?,avatar=?,powerId=?,organizationId=?,facultyId=?,schoolId=?,classId=?,className=?,cardId=?,phone=?,score=?"
+    const _sql = "insert into users set type=?,name=?,avatar=?,powerId=?,organizationId=?,facultyId=?,schoolId=?,classId=?,className=?,cardId=?,phone=?,score=?,address=?"
     return query(_sql,value)
   }else if (type === 2){
     const _sql = "select count(*) as count from users where cardId=?"
@@ -506,7 +556,7 @@ exports.addUser = (type,value) => {
 // 用户修改
 exports.updateUser= (type,value) => {
   if(type === 1){
-    const _sql = "UPDATE users set type=?,name=?,avatar=?,powerId=?,organizationId=?,facultyId=?,schoolId=?,classId=?,className=?,cardId=?,phone=?,score=? where id=?"
+    const _sql = "UPDATE users set type=?,name=?,avatar=?,powerId=?,organizationId=?,facultyId=?,schoolId=?,classId=?,className=?,cardId=?,phone=?,score=?,address=? where id=?"
     return query(_sql,value)
   }else if (type === 2){
     const _sql = "select count(*) as count from users where id=?"
@@ -698,6 +748,132 @@ exports.deletePlace = (type,id) => {
     return query(_sql)
   }else if(type === 2){
     const _sql = `select count(*) as count from places where id="${id}"`
+    return query(_sql)
+  }
+}
+
+// 题目添加
+exports.addPractice = (type,value) => {
+  if(type === 1){
+    const _sql = "insert into practices set content=?,options=?,answer=?,type=?"
+    return query(_sql,value)
+  }else if (type === 2){
+    const _sql = "select count(*) as count from practices where content=?"
+    return query(_sql,value)
+  }
+}
+
+// 题目修改
+exports.updatePractice= (type,value) => {
+  if(type === 1){
+    const _sql = "UPDATE practices set content=?,options=?,answer=?,type=? where id=?"
+    return query(_sql,value)
+  }else if (type === 2){
+    const _sql = "select count(*) as count from practices where id=?"
+    return query(_sql,value)
+  }else if (type ===3){
+    const _sql = "select * from practices where id=?"
+    return query(_sql,value)
+  }
+}
+
+// 题目查询
+exports.findPractices = (page,pageSize) => {
+  const _sql = `select * from practices order by id desc limit ${(page-1)*pageSize},${page*pageSize}`
+  return query(_sql)
+}
+
+// 题目删除
+exports.deletePractice = (type,id) => {
+  if(type === 1){
+    const _sql = `delete from practices where id="${id}"`
+    return query(_sql)
+  }else if(type === 2){
+    const _sql = `select count(*) as count from practices where id="${id}"`
+    return query(_sql)
+  }
+}
+
+// 礼物添加
+exports.addGift = (type,value) => {
+  if(type === 1){
+    const _sql = "insert into gifts set name=?,image=?,score=?,total=?"
+    return query(_sql,value)
+  }else if (type === 2){
+    const _sql = "select count(*) as count from gifts where name=?"
+    return query(_sql,value)
+  }
+}
+
+// 礼物修改
+exports.updateGift= (type,value) => {
+  if(type === 1){
+    const _sql = "UPDATE gifts set name=?,image=?,score=?,total=? where id=?"
+    return query(_sql,value)
+  }else if (type === 2){
+    const _sql = "select count(*) as count from gifts where id=?"
+    return query(_sql,value)
+  }else if (type ===3){
+    const _sql = "select * from gifts where id=?"
+    return query(_sql,value)
+  }
+}
+
+// 礼物查询
+exports.findGifts = (page,pageSize) => {
+  const _sql = `select * from gifts order by id desc limit ${(page-1)*pageSize},${page*pageSize}`
+  return query(_sql)
+}
+
+// 礼物删除
+exports.deleteGift = (type,id) => {
+  if(type === 1){
+    const _sql = `delete from gifts where id="${id}"`
+    return query(_sql)
+  }else if(type === 2){
+    const _sql = `select count(*) as count from gifts where id="${id}"`
+    return query(_sql)
+  }
+}
+
+// 评论添加
+exports.addComment = (type,value) => {
+  if(type === 1){
+    const _sql = "insert into comments set content=?,commentType=?,userId=?,fatherId=?,status=?,moment=?"
+    return query(_sql,value)
+  }else if (type === 2){
+    const _sql = "select count(*) as count from comments where content=?"
+    return query(_sql,value)
+  }
+}
+
+// 评论修改
+exports.updateComment= (type,value) => {
+  if(type === 1){
+    const _sql = "UPDATE comments set content=?,commentType=?,userId=?,fatherId=?,status=?,moment=? where id=?"
+    return query(_sql,value)
+  }else if (type === 2){
+    const _sql = "select count(*) as count from comments where id=?"
+    return query(_sql,value)
+  }else if (type ===3){
+    const _sql = "select * from comments where id=?"
+    return query(_sql,value)
+  }
+}
+
+// 评论查询
+exports.findComments = (page,pageSize) => {
+  const _sql = `select * from comments order by id desc limit ${(page-1)*pageSize},${page*pageSize}`
+  return query(_sql)
+}
+
+// 评论删除
+exports.deleteComment = (type,id) => {
+  if(type === 1){
+    const _sql = `delete from comments where id="${id}"`
+    return query(_sql)
+  }else if(type === 2){
+    const _sql = `select count(*) as count from comments where id="${id}"`
     return query(_sql)
   }
 }
