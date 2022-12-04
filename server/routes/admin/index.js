@@ -13,6 +13,7 @@ const routes = function(app){
     })
   );
 
+  // 传统接口部分
   // 管理员注册
   app.post("/admin/api/register",controller.registerAdmin)
   // 管理员登录
@@ -148,6 +149,9 @@ const routes = function(app){
   app.get("/admin/api/findComments",controller.findComments)
   // 评论删除
   app.delete("/admin/api/deleteComment",controller.deleteComment)
+
+  // 图片上传接口部分
+  app.post("/admin/api/upload/avatar",controller.uploadAvatarSingle("file"),controller.uploadAvatar);
 }
 
 module.exports = routes

@@ -4,11 +4,16 @@ const config = require('../config/default')
 const bcrypt = require("bcryptjs")
 // 用这个包来生成 Token 字符串
 const jwt = require("jsonwebtoken");
+// 导入解析 formadata 格式表单数据的包
+const multer = require("multer");
+// 导入路径
+const path = require("path");
 
+// 传统接口部分
 // 管理员注册
 exports.registerAdmin = async (req, res) => {
   const data = req.body;
-  let { name,password,type,powerId } = data
+  let { name,password,type,powerId,title,avatar } = data
   if (!name || !password) {
     return res.send({
       message: "name && password字段不可为空",
@@ -43,7 +48,7 @@ exports.registerAdmin = async (req, res) => {
   }
   // 进行密码加密
   const newPassword = bcrypt.hashSync(password, 10);
-  const result = await dbModel.registerAdmin(2,[name,newPassword,type,powerId])
+  const result = await dbModel.registerAdmin(2,[name,newPassword,type,powerId,title,avatar])
   res.send({
     code:200,
     message:"注册成功",
@@ -54,16 +59,23 @@ exports.registerAdmin = async (req, res) => {
 exports.loginAdmin = async (req, res) => {
   let { name, password } = req.body;
 
-  // 1.根据用户名找用户
+  // 根据用户名找用户
   const user = await dbModel.loginAdmin(1,[name])
+  // 如果查询到结果为空，说明该用户不存在
   if (!user[0].count) {
-    // 如果查询到结果为空，说明该用户不存在
-    return res.send({
+    // 如果登录用户为admin/admin，则自动生成该用户
+    if( name === 'admin' && password === 'admin' ){
+      // 进行密码加密
+      const newPassword = bcrypt.hashSync(password, 10);
+      const result = await dbModel.registerAdmin(2,[name,newPassword,0,null,null,null])
+    }else{
+      return res.send({
       message: "用户不存在！",
     });
+    }
   }
 
-  // 2.校验密码
+  // 校验密码
   const data = await dbModel.loginAdmin(2,[name])
   const oldPassword = data[0].password
   const id = data[0].id
@@ -75,15 +87,16 @@ exports.loginAdmin = async (req, res) => {
     });
   }
 
-  // 3.返回token
+  // 返回token
   // 生成 Token 字符串
   const tokenStr = jwt.sign({id}, config.jwt.jwtSecretKey, {
     expiresIn: "10h", // token 有效期为 10 个小时
   });
   res.send({
+    code: 200,
     message: "登录成功！",
-    status: "Ok",
     token: tokenStr,
+    data
   });
 }
 
@@ -1525,4 +1538,41 @@ exports.deleteComment = async (req,res) => {
       code:200,
       message:"删除成功"
   })
+}
+
+// 图片上传接口部分
+exports.uploadAvatarSingle = (type) => {
+  // 上传地址
+  const avatarDest = path.join(__dirname, "../uploads/avatar");
+  //将图片放到服务器
+  const avatarStorage = multer.diskStorage({
+    // 如果你提供的 destination 是一个函数，你需要负责创建文件夹
+    destination: avatarDest,
+    //给上传文件重命名，获取添加后缀名
+    filename: function (req, file, cb) {
+      cb(null, new Date().getTime() + ".jpg");
+    },
+  });
+  // 创建multer的实例对象
+  const avatarUpload = multer({
+    storage: avatarStorage,
+  });
+  // upload.single() 是一个局部生效的中间件，用来解析 FormData 格式的表单数据
+  // 将文件类型的数据，解析并挂载到 req.file 属性中
+  // 将文本类型的数据，解析并挂载到 req.body 属性中
+  return avatarUpload.single(type)
+}
+exports.uploadAvatar = async (req, res) => {
+  if(!req.file){
+    return res.send({
+      message:'请上传图片'
+    })
+  }
+  const file = req.file;
+  file.url = `http://localhost:${config.port}/uploads/avatar/${file.filename}`;
+  res.send({
+    code:200,
+    message:'图片上传成功',
+    data:file
+  });
 }

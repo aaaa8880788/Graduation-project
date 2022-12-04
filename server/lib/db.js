@@ -62,6 +62,8 @@ let managers = `create table if not exists managers(
   name VARCHAR(100) NOT NULL COMMENT '用户名',
   password VARCHAR(100) NOT NULL COMMENT '密码',
   powerId VARCHAR(100) COMMENT '拥有权限id',
+  title VARCHAR(100) COMMENT '名字',
+  avatar VARCHAR(1000) COMMENT '头像',
   PRIMARY KEY (id) 
 )`
 
@@ -257,7 +259,7 @@ exports.registerAdmin = (type,value) => {
     const _sql = "select count(*) as count from managers where name=?"
     return query(_sql,value)
   }else if (type === 2){
-    const _sql = "insert into managers set name=?,password=?,type=?,powerId=?"
+    const _sql = "insert into managers set name=?,password=?,type=?,powerId=?,title=?,avatar=?"
     return query(_sql,value)
   }
 }
