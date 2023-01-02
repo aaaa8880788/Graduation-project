@@ -1,84 +1,98 @@
 <template>
-  <el-form :style="formStyle">
-    <el-form-item :style="itemStyle">
-      <el-input
-        :placeholder="placeholder"
-        style="width: 100%; height: 100%"
-        :model-value="modelValue"
-        @update:modelValue="valueChange($event)"
-        clearable
-        @clear="clearHandle"
-      >
-        <template #append>
-          <el-button
-            :icon="Search"
-            style="height: 100%"
-            @click="searchBtnHandler"
-            >搜索</el-button
-          >
-        </template>
-      </el-input>
-    </el-form-item>
-    <el-button type="primary" @click="addBtnHandler">{{
-      buttonText
-    }}</el-button>
-  </el-form>
+  <div class="page-search">
+    <Bu-form 
+      ref="BuFormRef"
+      v-bind="searchFormConfig" 
+      :modelValue="queryInfo"
+      @update:modelValue="valueChange($event)">
+      <template #header>
+        <div class="header">
+          <h1>高级检索</h1>
+        </div>
+      </template>
+      <template #footer>
+        <div class="footer">
+          <el-button 
+            type="primary" 
+            :icon="Refresh" 
+            @click="resetClick">
+            重置
+          </el-button>
+          <el-button 
+            type="primary" 
+            :icon="Search" 
+            @click="searchClick">
+            搜索
+          </el-button>
+          <el-button 
+            v-if="addBtnShow"
+            type="primary" 
+            :icon="CirclePlus" 
+            @click="addClick">
+            添加
+          </el-button>
+        </div>
+      </template>
+    </Bu-form>
+  </div>
 </template>
 
 <script setup lang="ts">
-import { Search } from "@element-plus/icons-vue";
+import BuForm from '@/components/form/form.vue'
+import { Search, Refresh,CirclePlus } from '@element-plus/icons-vue'
+import { ref, defineProps, defineEmits } from 'vue'
+import { IForm } from '@/components/form/type'
+
+// 定义属性
 interface Props {
-  placeholder?: string;
-  itemStyle?: any;
-  buttonText?: string;
-  formStyle?: any;
-  modelValue: string; //绑定表单的每个数据
+  searchFormConfig: IForm
+  queryInfo:any
+  addBtnShow:boolean
 }
-const props = withDefaults(defineProps<Props>(), {
-  placeholder: "请输入用户名",
-  itemStyle: () => ({
-    height: "40px",
-    width: "50%",
-    marginRight: "40px",
-  }),
-  buttonText: "添加用户",
-  formStyle: () => ({
-    display: "flex",
-    "align-items": "center",
-    "justify-content": "center",
-    margin: "50px",
-  }),
-  inputClearable: true,
-});
-
+const props = withDefaults(defineProps<Props>(),{
+  addBtnShow:false
+})
 const emit = defineEmits<{
-  (e: "update:modelValue", value: any): void;
-  (e: "searchBtnClick"): void;
-  (e: "addBtnClick"): void;
-  (e: "clearBtnClick"): void;
-}>();
+  (e: 'resetBtnClick'): void
+  (e: 'addBtnClick'): void
+  (e: 'searchBtnClick', formData: object): void
+  (e: "update:queryInfo", val: any): void;
+}>()
+const BuFormRef = ref<InstanceType<typeof BuForm>>()
 
-// 定义方法
-// 双向绑定方法
+// 2.重置与搜索功能
+// 重置按钮触发
+const resetClick = () => {
+  BuFormRef.value?.resetForm()
+  emit('resetBtnClick')
+}
+// 搜索按钮触发
+const searchClick = () => {
+  // 这里需要遍历搜索配置项，配置项里可以传dataType，要求数据返回什么类型的数据
+  props.searchFormConfig.formItems.map((item) => {
+    if (item.dataType === 'number' && props.queryInfo[item.field]) {
+      emit('update:queryInfo',Number(props.queryInfo[item.field]))
+    }
+  })
+  emit('searchBtnClick', props.queryInfo)
+}
+// 添加按钮触发
+const addClick = () => {
+  emit('addBtnClick')
+}
+// 搜索值改变
 const valueChange = (value: any) => {
-  emit("update:modelValue", value);
-};
-// 搜索按钮点击
-const searchBtnHandler = () => {
-  emit("searchBtnClick");
-};
-// 添加按钮点击
-const addBtnHandler = () => {
-  emit("addBtnClick");
-};
-// 输入框清空点击
-const clearHandle = () => {
-  emit("clearBtnClick");
-};
+  emit('update:queryInfo', value)
+}
 </script>
 
-<style lang="less" scoped>
-.el-form-item {
-  margin-bottom: 0;
+<style scoped>
+.header {
+  padding-top: 20px;
+  text-align: center;
+}
+.footer {
+  text-align: right;
+  padding: 0 50px 20px 50px;
 }
 </style>

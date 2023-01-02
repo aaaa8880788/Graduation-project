@@ -23,10 +23,8 @@
       <!-- 默认为一个分页器 -->
       <slot>
         <el-pagination
-          :currentPage="pageInfo.currentPage"
-          @update:currentPage="valueChange($event, 'currentPage')"
-          :pageSize="pageInfo.pageSize"
-          @update:pageSize="valueChange($event, 'pageSize')"
+          v-model:current-page="pageInfo.page"
+          v-model:page-size="pageInfo.pageSize"
           :page-sizes="[5, 10, 15, 20]"
           layout="total, sizes, prev, pager, next, jumper"
           :total="tableDataTotal"
@@ -60,20 +58,20 @@ const props = withDefaults(defineProps<Props>(), {
   footerStyle: () => ({
     display: "flex",
     justifyContent: "end",
-    marginTop: "10px",
+    margin: "10px 0",
   }),
 });
 const emit = defineEmits<{
-  (e: "pageSizeChange"): void;
-  (e: "currentSizeChange"): void;
+  (e: "pageSizeChange",val: any): void;
+  (e: "currentSizeChange",val: any): void;
   (e: "update:pageInfo", val: any): void;
 }>();
 // 分页器处理函数
-const handleSizeChange = () => {
-  emit("pageSizeChange");
+const handleSizeChange = (val:any) => {
+  emit("pageSizeChange",val);
 };
-const handleCurrentChange = () => {
-  emit("currentSizeChange");
+const handleCurrentChange = (val:any) => {
+  emit("currentSizeChange",val);
 };
 const valueChange = (val: any, type: string) => {
   emit("update:pageInfo", { ...props.pageInfo, [type]: val });

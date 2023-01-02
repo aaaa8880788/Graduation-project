@@ -4,6 +4,8 @@ import DRequest from "./request";
 import localCache from "@/utils/local-cache";
 // 导入路由
 import router from "../router/index";
+// 导入Element Plus方法
+import { ElMessage } from "element-plus";
 
 const baseURL = import.meta.env.VITE_APP_BASE_URL;
 const timeout = Number(import.meta.env.VITE_APP_TIME_OUT);
@@ -17,7 +19,7 @@ const dRequest1 = new DRequest({
     requestInterceptor: (config: any) => {
       const token = localCache.getCache("token");
       if (token) {
-        config.headers.Authorization = token;
+        config.headers.Authorization = `${token}`;
       }
       return config;
     },
@@ -31,13 +33,14 @@ const dRequest1 = new DRequest({
     },
     // 如果返回的接口数据中，状态码为401，说明token过期或失效，则需要清除浏览器中缓存的token
     responseInterceptorCatch: (err) => {
-      console.log('err',err);
-      console.log('err.response',err.response);
       // console.log('在new实例时有传入拦截器的实例才有的拦截器:响应失败的拦截')
-      const { status } = err.response;
-      if (status === 401) {
+      if (err?.response?.status === 401) {
         //   token过期，清除token
         localCache.deleteCache("token");
+        ElMessage({
+          message: "登录过期，请重新登录",
+          type: "error",
+        });
         // 重新跳转login页面
         router.push("/login");
       }

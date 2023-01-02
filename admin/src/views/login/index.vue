@@ -8,7 +8,7 @@
         <!-- 右侧登录信息部分 -->
         <div class="login_wrap_right">
           <div class="form">
-            <div class="title">党建后台管理系统</div>
+            <div class="title">智慧党建后台管理系统</div>
             <div class="content">
               <div class="username">用户名</div>
               <input class="text" type="text" v-model="formData.name" autofocus />
@@ -28,16 +28,17 @@
 <script setup lang="ts">
 import { ref } from "vue";
 import { useRouter } from "vue-router";
-import { useLoginStore } from 'store/login';
 import { ElMessage } from "element-plus";
-import { accountLoginRequest } from "@/network/login";
+import localCache from "@/utils/local-cache";
+import { accountLoginRequest,getMenuList } from "@/network/login";
+import { useLoginStore } from "@/store/login";
 // 定义属性
 const formData = ref({
   name: "admin",
-  password: "admin",
+  password: "123456",
 });
-const loginStore = useLoginStore();
 const router = useRouter();
+const useLogin = useLoginStore()
 
 // 定义方法
 
@@ -50,11 +51,26 @@ const resetBtnClick = () => {
 const loginBtnClick = async () => {
   const result = await accountLoginRequest("/login", formData.value);
   if (result.code === 200) {
+    const userId:number = result.data.id
     // 保存token
-    const token = result.token
-    loginStore.setToken({
-      token
-    });
+    const token = `Bearer ${result.token}`
+    localCache.setCache("token",token);
+    // 保存登录用户信息
+    localCache.setCache("userId",userId);
+    const getMenuListResult = await getMenuList('/getMenuList',userId)
+    if(getMenuListResult.code === 200){
+      const menuList =  getMenuListResult.data
+      // 保存菜单信息
+      localCache.setCache("menuList",menuList);
+      if(!menuList.length){
+        // 弹窗提示
+        return ElMessage({
+          message: '您没有登录后台管理系统的权限，请联系管理员',
+          type: "error",
+        });
+      }
+    }
+    await useLogin.loadLocalLogin()
     // 弹窗提示
     ElMessage({
       message: "登录成功",
@@ -69,6 +85,7 @@ const loginBtnClick = async () => {
     });
   }
 };
+
 </script>
 
 <style scoped lang="less">

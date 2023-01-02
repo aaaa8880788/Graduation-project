@@ -1,7 +1,7 @@
 <template>
   <div class="demo-image__preview">
     <el-image
-      style="width: auto; height: 65px"
+      style="width: auto; height: 30px"
       :src="imageUrl"
       :preview-src-list="[imageUrl]"
       fit="fill"

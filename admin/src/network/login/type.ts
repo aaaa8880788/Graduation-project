@@ -2,4 +2,5 @@ interface LoginAccount {
   name: string;
   password: string;
 }
-export type { LoginAccount };
+type UserId = number | string;
+export type { LoginAccount,UserId };

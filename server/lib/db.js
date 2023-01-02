@@ -1,6 +1,10 @@
+
 const mysql = require('mysql')
 const config = require('../config/default')
-
+// 用这个包来加密字符串
+const bcrypt = require("bcryptjs")
+// 导入工具函数
+const utils = require('../utils/generateWhereStr')
 const db = mysql.createConnection({
   host:config.database.HOST,
   port:config.database.PORT,
@@ -61,20 +65,436 @@ let managers = `create table if not exists managers(
   type INT NOT NULL COMMENT '类型-0超级管理员-1老师',
   name VARCHAR(100) NOT NULL COMMENT '用户名',
   password VARCHAR(100) NOT NULL COMMENT '密码',
-  powerId VARCHAR(100) COMMENT '拥有权限id',
+  powerId VARCHAR(10000) COMMENT '拥有权限id数组',
   title VARCHAR(100) COMMENT '名字',
   avatar VARCHAR(1000) COMMENT '头像',
+  moment varchar(100) NOT NULL COMMENT '创建时间',
   PRIMARY KEY (id) 
 )`
+
+// 管理员数据初始化
+const managerInit = (type,value)=>{
+  if(type === 1){
+    const _sql = "select count(*) as count from managers where name=?"
+    return query(_sql,value)
+  }else if (type === 2){
+    const _sql = "insert into managers set name=?,password=?,type=?,powerId=?,title=?,avatar=?,moment=?"
+    return query(_sql,value)
+  }else if (type === 3){
+    const _sql = "select * from powers"
+    return query(_sql)
+  }
+}
 
 // 权限列表
 let powers = `create table if not exists powers(
   id INT NOT NULL AUTO_INCREMENT,
   name VARCHAR(100) NOT NULL COMMENT '类型名称：如文章',
-  type INT NOT NULL COMMENT '类型-前台-1后台',
+  type INT NOT NULL COMMENT '类型-0前台-1后台',
   powerName VARCHAR(100) NOT NULL COMMENT '权限名称：如添加',
+  moment varchar(100) NOT NULL COMMENT '创建时间',
   PRIMARY KEY (id) 
 )`
+
+// 权限数据初始化
+const powerInit = (type,value) => {
+  if(type === 0){
+    const _sql = `insert into powers set name=?,type=?,powerName=?,moment=?`
+    return query(_sql,value)
+  }else if (type === 1){
+    const _sql = "select count(*) as count from powers where name=? and type=? and powerName=?"
+    return query(_sql,value)
+  }
+}
+const powerData = [
+    /*
+    *
+    * 后台部分
+    *  
+    */
+    // 活动
+    {
+      name: "active",
+      type: 1,
+      powerName: "add",
+      moment:new Date().getTime()
+    },
+    {
+      name: "active",
+      type: 1,
+      powerName: "delete",
+      moment:new Date().getTime()
+    },
+    {
+      name: "active",
+      type: 1,
+      powerName: "modify",
+      moment:new Date().getTime()
+    },
+    {
+      name: "active",
+      type: 1,
+      powerName: "find",
+      moment:new Date().getTime()
+    },
+  // 文章
+  {
+    name: "article",
+    type: 1,
+    powerName: "add",
+    moment:new Date().getTime()
+  },
+  {
+    name: "article",
+    type: 1,
+    powerName: "delete",
+    moment:new Date().getTime()
+  },
+  {
+    name: "article",
+    type: 1,
+    powerName: "modify",
+    moment:new Date().getTime()
+  },
+  {
+    name: "article",
+    type: 1,
+    powerName: "find",
+    moment:new Date().getTime()
+  },
+  // 班级
+  {
+    name: "class",
+    type: 1,
+    powerName: "add",
+    moment:new Date().getTime()
+  },
+  {
+    name: "class",
+    type: 1,
+    powerName: "delete",
+    moment:new Date().getTime()
+  },
+  {
+    name: "class",
+    type: 1,
+    powerName: "modify",
+    moment:new Date().getTime()
+  },
+  {
+    name: "class",
+    type: 1,
+    powerName: "find",
+    moment:new Date().getTime()
+  },
+  // 评论
+  {
+    name: "comment",
+    type: 1,
+    powerName: "delete",
+    moment:new Date().getTime()
+  },
+  {
+    name: "comment",
+    type: 1,
+    // 审核
+    powerName: "audit",
+    moment:new Date().getTime()
+  },
+  {
+    name: "comment",
+    type: 1,
+    powerName: "find",
+    moment:new Date().getTime()
+  },
+  // 学院
+  {
+    name: "faculty",
+    type: 1,
+    powerName: "add",
+    moment:new Date().getTime()
+  },
+  {
+    name: "faculty",
+    type: 1,
+    powerName: "delete",
+    moment:new Date().getTime()
+  },
+  {
+    name: "faculty",
+    type: 1,
+    powerName: "modify",
+    moment:new Date().getTime()
+  },
+  {
+    name: "faculty",
+    type: 1,
+    powerName: "find",
+    moment:new Date().getTime()
+  },
+  // 奖品
+  {
+    name: "gift",
+    type: 1,
+    powerName: "add",
+    moment:new Date().getTime()
+  },
+  {
+    name: "gift",
+    type: 1,
+    powerName: "delete",
+    moment:new Date().getTime()
+  },
+  {
+    name: "gift",
+    type: 1,
+    powerName: "modify",
+    moment:new Date().getTime()
+  },
+  {
+    name: "gift",
+    type: 1,
+    powerName: "find",
+    moment:new Date().getTime()
+  },
+  // 管理员
+  {
+    name: "manager",
+    type: 1,
+    powerName: "add",
+    moment:new Date().getTime()
+  },
+  {
+    name: "manager",
+    type: 1,
+    powerName: "delete",
+    moment:new Date().getTime()
+  },
+  {
+    name: "manager",
+    type: 1,
+    powerName: "modify",
+    moment:new Date().getTime()
+  },
+  {
+    name: "manager",
+    type: 1,
+    powerName: "find",
+    moment:new Date().getTime()
+  },
+  {
+    name: "manager",
+    type: 1,
+    powerName: "power",
+    moment:new Date().getTime()
+  },
+  // 组织
+  {
+    name: "organization",
+    type: 1,
+    powerName: "add",
+    moment:new Date().getTime()
+  },
+  {
+    name: "organization",
+    type: 1,
+    powerName: "delete",
+    moment:new Date().getTime()
+  },
+  {
+    name: "organization",
+    type: 1,
+    powerName: "modify",
+    moment:new Date().getTime()
+  },
+  {
+    name: "organization",
+    type: 1,
+    powerName: "find",
+    moment:new Date().getTime()
+  },
+  // 地点
+  {
+    name: "place",
+    type: 1,
+    powerName: "add",
+    moment:new Date().getTime()
+  },
+  {
+    name: "place",
+    type: 1,
+    powerName: "delete",
+    moment:new Date().getTime()
+  },
+  {
+    name: "place",
+    type: 1,
+    powerName: "modify",
+    moment:new Date().getTime()
+  },
+  {
+    name: "place",
+    type: 1,
+    powerName: "find",
+    moment:new Date().getTime()
+  },
+  // 题目
+  {
+    name: "practice",
+    type: 1,
+    powerName: "add",
+    moment:new Date().getTime()
+  },
+  {
+    name: "practice",
+    type: 1,
+    powerName: "delete",
+    moment:new Date().getTime()
+  },
+  {
+    name: "practice",
+    type: 1,
+    powerName: "modify",
+    moment:new Date().getTime()
+  },
+  {
+    name: "practice",
+    type: 1,
+    powerName: "find",
+    moment:new Date().getTime()
+  },
+  // 角色
+  {
+    name: "role",
+    type: 1,
+    powerName: "add",
+    moment:new Date().getTime()
+  },
+  {
+    name: "role",
+    type: 1,
+    powerName: "delete",
+    moment:new Date().getTime()
+  },
+  {
+    name: "role",
+    type: 1,
+    powerName: "modify",
+    moment:new Date().getTime()
+  },
+  {
+    name: "role",
+    type: 1,
+    powerName: "find",
+    moment:new Date().getTime()
+  },
+  // 学校
+  {
+    name: "school",
+    type: 1,
+    powerName: "add",
+    moment:new Date().getTime()
+  },
+  {
+    name: "school",
+    type: 1,
+    powerName: "delete",
+    moment:new Date().getTime()
+  },
+  {
+    name: "school",
+    type: 1,
+    powerName: "modify",
+    moment:new Date().getTime()
+  },
+  {
+    name: "school",
+    type: 1,
+    powerName: "find",
+    moment:new Date().getTime()
+  },
+  // 用户
+  {
+    name: "user",
+    type: 1,
+    powerName: "add",
+    moment:new Date().getTime()
+  },
+  {
+    name: "user",
+    type: 1,
+    powerName: "delete",
+    moment:new Date().getTime()
+  },
+  {
+    name: "user",
+    type: 1,
+    powerName: "modify",
+    moment:new Date().getTime()
+  },
+  {
+    name: "user",
+    type: 1,
+    powerName: "find",
+    moment:new Date().getTime()
+  },
+  // 视频
+  {
+    name: "vedio",
+    type: 1,
+    powerName: "add",
+    moment:new Date().getTime()
+  },
+  {
+    name: "vedio",
+    type: 1,
+    powerName: "delete",
+    moment:new Date().getTime()
+  },
+  {
+    name: "vedio",
+    type: 1,
+    powerName: "modify",
+    moment:new Date().getTime()
+  },
+  {
+    name: "vedio",
+    type: 1,
+    powerName: "find",
+    moment:new Date().getTime()
+  },
+  /*
+    *
+    * 前台部分
+    *  
+    */
+  // 活动
+  {
+    name: "active",
+    type: 0,
+    powerName: "add",
+    moment:new Date().getTime()
+  },
+  {
+    name: "active",
+    type: 0,
+    powerName: "delete",
+    moment:new Date().getTime()
+  },
+  {
+    name: "active",
+    type: 0,
+    powerName: "modify",
+    moment:new Date().getTime()
+  },
+  {
+    name: "active",
+    type: 0,
+    powerName: "find",
+    moment:new Date().getTime()
+  },
+]
+
 
 // 角色列表
 let roles = `create table if not exists roles(
@@ -82,6 +502,7 @@ let roles = `create table if not exists roles(
   name VARCHAR(100) NOT NULL COMMENT '角色名称,如团员',
   introduce VARCHAR(1000) COMMENT '角色介绍',
   request VARCHAR(1000) COMMENT '申请要求',
+  moment varchar(100) NOT NULL COMMENT '创建时间',
   PRIMARY KEY (id) 
 )`
 
@@ -90,6 +511,7 @@ let organizations = `create table if not exists organizations(
   id INT NOT NULL AUTO_INCREMENT,
   name VARCHAR(100) NOT NULL COMMENT '支部名称：如团支部、党支部',
   introduce VARCHAR(1000) COMMENT '支部介绍',
+  moment varchar(100) NOT NULL COMMENT '创建时间',
   PRIMARY KEY (id) 
 )`
 
@@ -97,6 +519,7 @@ let organizations = `create table if not exists organizations(
 let faculties = `create table if not exists faculties(
   id INT NOT NULL AUTO_INCREMENT,
   name VARCHAR(100) NOT NULL COMMENT '院系名称例如：信息科学与技术学院',
+  moment varchar(100) NOT NULL COMMENT '创建时间',
   PRIMARY KEY (id) 
 )`
 
@@ -105,6 +528,7 @@ let schools = `create table if not exists schools(
   id INT NOT NULL AUTO_INCREMENT,
   name VARCHAR(100) NOT NULL COMMENT '学校名字：仲恺农业工程学院',
   logo VARCHAR(1000) COMMENT '学校logo',
+  moment varchar(100) NOT NULL COMMENT '创建时间',
   PRIMARY KEY (id) 
 )`
 
@@ -115,6 +539,7 @@ let classes = `create table if not exists classes(
   title VARCHAR(100) COMMENT '专业简称：通信',
   classData VARCHAR(1000) COMMENT '班级数组如：[192,202]',
   facultyId INT NOT NULL COMMENT '院系id',
+  moment varchar(100) NOT NULL COMMENT '创建时间',
   PRIMARY KEY (id) 
 )`
 
@@ -134,6 +559,7 @@ let users = `create table if not exists users(
   phone VARCHAR(1000) NOT NULL COMMENT '手机号',
   score INT NOT NULL COMMENT '积分值',
   address VARCHAR(1000) COMMENT '收货地址',
+  moment varchar(100) NOT NULL COMMENT '创建时间',
   PRIMARY KEY (id) 
 )`
 
@@ -142,8 +568,9 @@ let articles = `create table if not exists articles(
   id INT NOT NULL AUTO_INCREMENT,
   title VARCHAR(100) NOT NULL COMMENT '文章标题',
   type INT NOT NULL COMMENT '文章类型0时事要闻1新思想2党史3党建',
-  body VARCHAR(1000) NOT NULL COMMENT '文章内容',
+  body LONGTEXT NOT NULL COMMENT '文章内容',
   supportUser VARCHAR(1000) COMMENT '收藏用户id数组',
+  moment VARCHAR(100) NOT NULL COMMENT '创建时间',
   PRIMARY KEY (id) 
 )`
 
@@ -155,6 +582,7 @@ let vedioes = `create table if not exists vedioes(
   body VARCHAR(1000) NOT NULL COMMENT '视频内容',
   vedio VARCHAR(1000) NOT NULL COMMENT '视频文件',
   supportUser VARCHAR(1000) COMMENT '收藏用户id数组',
+  moment varchar(100) NOT NULL COMMENT '创建时间',
   PRIMARY KEY (id) 
 )`
 
@@ -169,6 +597,7 @@ let actives = `create table if not exists actives(
   joinUser VARCHAR(1000) COMMENT '参与用户id数组',
   score INT COMMENT '活动奖励积分',
   isPass INT NOT NULL COMMENT '审核状态0不通过1通过',
+  moment varchar(100) NOT NULL COMMENT '创建时间',
   PRIMARY KEY (id) 
 )`
 
@@ -178,6 +607,7 @@ let places = `create table if not exists places(
   name VARCHAR(100) NOT NULL COMMENT '活动地点',
   status INT NOT NULL COMMENT '使用状态0不可使用1可使用',
   volume INT NOT NULL COMMENT '容纳人数',
+  moment varchar(100) NOT NULL COMMENT '创建时间',
   PRIMARY KEY (id) 
 )`
 
@@ -188,6 +618,7 @@ let practices = `create table if not exists practices(
   options VARCHAR(1000) NOT NULL COMMENT '题目选项（Array）',
   answer VARCHAR(1000) NOT NULL COMMENT '答案（Array）',
   type INT NOT NULL COMMENT '0单选1多选',
+  moment varchar(100) NOT NULL COMMENT '创建时间',
   PRIMARY KEY (id) 
 )`
 
@@ -198,6 +629,7 @@ let gifts = `create table if not exists gifts(
   image VARCHAR(1000) COMMENT '礼物图片',
   score INT NOT NULL COMMENT '所需兑换积分值',
   total INT NOT NULL COMMENT '库存数量',
+  moment varchar(100) NOT NULL COMMENT '创建时间',
   PRIMARY KEY (id) 
 )`
 
@@ -250,17 +682,49 @@ async function create(){
   createTable(practices)
   createTable(gifts)
   createTable(comments)
+
+  // 初始化权限数据
+  for(let i = 0; i<powerData.length; i++){
+    const count =  await powerInit(1,[powerData[i].name,powerData[i].type,powerData[i].powerName])
+    if(!count[0].count){
+      await powerInit(0,[powerData[i].name,powerData[i].type,powerData[i].powerName,powerData[i].moment])
+    }
+  }
+  // 初始化超级管理员数据
+  const managerCount = await managerInit(1,'admin')
+  if(!managerCount[0].count){
+    let name = 'admin'
+    let password = '123456'
+    let type = 0
+    let powerId
+    let title = '超级管理员'
+    let moment = new Date()
+    const powerIdData = await managerInit(3)
+    if(powerIdData.length){
+      const arr = []
+      powerIdData.forEach(item=>{
+        arr.push(item)
+      })
+      powerId = JSON.stringify(arr)
+    }
+    // 进行密码加密
+    const newPassword = bcrypt.hashSync(password, 10);
+    await managerInit(2,[name,newPassword,type,powerId,title,null,moment])
+  }
 }
 create()
 
-// 管理员注册
+// 超级管理员注册
 exports.registerAdmin = (type,value) => {
   if(type === 1){
     const _sql = "select count(*) as count from managers where name=?"
     return query(_sql,value)
   }else if (type === 2){
-    const _sql = "insert into managers set name=?,password=?,type=?,powerId=?,title=?,avatar=?"
+    const _sql = "insert into managers set name=?,password=?,type=?,powerId=?,title=?,avatar=?,moment=?"
     return query(_sql,value)
+  }else if (type ===3){
+    const _sql = "select * from powers"
+    return query(_sql)
   }
 }
 
@@ -276,15 +740,69 @@ exports.loginAdmin = (type,value) => {
 }
 
 // 管理员查询
-exports.findManagers = (page,pageSize) => {
-  const _sql = `select * from managers order by id desc limit ${(page-1)*pageSize},${page*pageSize}`
-  return query(_sql)
+exports.findManagers = (type,value) => {
+  if(type === 1){
+    const [page,pageSize,name,type,title,moment] = value
+    const newArr = [{name},{type},{title},{moment}].filter(item=>{
+      for(const key in item){
+        return item[key] !== null
+      }
+    })
+    const whereStr = utils.generateWhere(newArr)
+    const _sql = `select * from managers ${whereStr} order by id desc limit ${(page-1)*pageSize},${page*pageSize}`
+    return query(_sql)
+  }else if (type === 2){
+    const [name,type,title,moment] = value
+    const newArr = [{name},{type},{title},{moment}].filter(item=>{
+      for(const key in item){
+        return item[key] !== null
+      }
+    })
+    const whereStr = utils.generateWhere(newArr)
+    const _sql = `select * from managers ${whereStr}`
+    return query(_sql)
+  }
+}
+
+// 管理员查询通过id
+exports.findManagerById = (type,id) => {
+  if(type === 1){
+    const _sql = `select * from managers where id="${id}"`
+    return query(_sql)
+  }else if(type ===2){
+    const _sql = `select count(*) as count from managers where id="${id}"`
+    return query(_sql)
+  }
 }
 
 // 管理员删除
 exports.deleteManager = (type,id) => {
   if(type === 1){
     const _sql = `delete from managers where id="${id}"`
+    return query(_sql)
+  }else if(type ===2){
+    const _sql = `select count(*) as count from managers where id="${id}"`
+    return query(_sql)
+  }
+}
+
+// 管理员修改
+exports.updateManager = (type,value) => {
+  if(type === 1){
+    const _sql = "UPDATE managers set type=?,name=?,password=?,powerId=?,title=?,avatar=? where id=?"
+    return query(_sql,value)
+  }else if (type === 2){
+    const _sql = "select count(*) as count from managers where id=?"
+    return query(_sql,value)
+  }else if (type ===3){
+    const _sql = "select * from managers where id=?"
+    return query(_sql,value)
+  }
+}
+
+exports.getMenuList = (type,id) => {
+  if(type === 1){
+    const _sql = `select * from managers where id="${id}"`
     return query(_sql)
   }else if(type ===2){
     const _sql = `select count(*) as count from managers where id="${id}"`
@@ -379,7 +897,7 @@ exports.deleteRole = (type,id) => {
 // 组织添加
 exports.addOrganization = (type,value) => {
   if(type === 1){
-    const _sql = "insert into organizations set name=?,introduce=?"
+    const _sql = "insert into organizations set name=?,introduce=?,moment=?"
     return query(_sql,value)
   }else if (type === 2){
     const _sql = "select count(*) as count from organizations where name=?"
@@ -402,9 +920,39 @@ exports.updateOrganization= (type,value) => {
 }
 
 // 组织查询
-exports.findOrganizations = (page,pageSize) => {
-  const _sql = `select * from organizations order by id desc limit ${(page-1)*pageSize},${page*pageSize}`
-  return query(_sql)
+exports.findOrganizations = (type,value) => {
+  if(type === 1){
+    const [page,pageSize,name,moment] = value
+    const newArr = [{name},{moment}].filter(item=>{
+      for(const key in item){
+        return item[key] !== null
+      }
+    })
+    const whereStr = utils.generateWhere(newArr)
+    const _sql = `select * from organizations ${whereStr} order by id desc limit ${(page-1)*pageSize},${page*pageSize}`
+    return query(_sql)
+  }else if (type === 2){
+    const [name,moment] = value
+    const newArr = [{name},{moment}].filter(item=>{
+      for(const key in item){
+        return item[key] !== null
+      }
+    })
+    const whereStr = utils.generateWhere(newArr)
+    const _sql = `select * from organizations ${whereStr}`
+    return query(_sql)
+  }
+}
+
+// 组织查询通过id
+exports.findOrganizationById = (type,id) => {
+  if(type === 1){
+    const _sql = `select * from organizations where id="${id}"`
+    return query(_sql)
+  }else if(type ===2){
+    const _sql = `select count(*) as count from organizations where id="${id}"`
+    return query(_sql)
+  }
 }
 
 // 组织删除
@@ -421,7 +969,7 @@ exports.deleteOrganization = (type,id) => {
 // 学院添加
 exports.addFaculty = (type,value) => {
   if(type === 1){
-    const _sql = "insert into faculties set name=?"
+    const _sql = "insert into faculties set name=?,moment=?"
     return query(_sql,value)
   }else if (type === 2){
     const _sql = "select count(*) as count from faculties where name=?"
@@ -444,9 +992,39 @@ exports.updateFaculty= (type,value) => {
 }
 
 // 学院查询
-exports.findFaculties = (page,pageSize) => {
-  const _sql = `select * from faculties order by id desc limit ${(page-1)*pageSize},${page*pageSize}`
-  return query(_sql)
+exports.findFaculties = (type,value) => {
+  if(type === 1){
+    const [page,pageSize,name,moment] = value
+    const newArr = [{name},{moment}].filter(item=>{
+      for(const key in item){
+        return item[key] !== null
+      }
+    })
+    const whereStr = utils.generateWhere(newArr)
+    const _sql = `select * from faculties ${whereStr} order by id desc limit ${(page-1)*pageSize},${page*pageSize}`
+    return query(_sql)
+  }else if (type === 2){
+    const [name,moment] = value
+    const newArr = [{name},{moment}].filter(item=>{
+      for(const key in item){
+        return item[key] !== null
+      }
+    })
+    const whereStr = utils.generateWhere(newArr)
+    const _sql = `select * from faculties ${whereStr}`
+    return query(_sql)
+  }
+}
+
+// 学院查询通过id
+exports.findFacultyById = (type,id) => {
+  if(type === 1){
+    const _sql = `select * from faculties where id="${id}"`
+    return query(_sql)
+  }else if(type ===2){
+    const _sql = `select count(*) as count from faculties where id="${id}"`
+    return query(_sql)
+  }
 }
 
 // 学院删除
@@ -589,7 +1167,7 @@ exports.deleteUser = (type,id) => {
 // 文章添加
 exports.addArticle = (type,value) => {
   if(type === 1){
-    const _sql = "insert into articles set title=?,type=?,body=?,supportUser=?"
+    const _sql = "insert into articles set title=?,type=?,body=?,supportUser=?,moment=?"
     return query(_sql,value)
   }else if (type === 2){
     const _sql = "select count(*) as count from articles where title=? and type=?"
@@ -612,9 +1190,39 @@ exports.updateArticle= (type,value) => {
 }
 
 // 文章查询
-exports.findArticles = (page,pageSize) => {
-  const _sql = `select * from articles order by id desc limit ${(page-1)*pageSize},${page*pageSize}`
-  return query(_sql)
+exports.findArticles = (type,value) => {
+  if(type === 1){
+    const [page,pageSize,type,title,moment] = value
+    const newArr = [{type},{title},{moment}].filter(item=>{
+      for(const key in item){
+        return item[key] !== null
+      }
+    })
+    const whereStr = utils.generateWhere(newArr)
+    const _sql = `select * from articles ${whereStr} order by id desc limit ${(page-1)*pageSize},${page*pageSize}`
+    return query(_sql)
+  }else if (type === 2){
+    const [type,title,moment] = value
+    const newArr = [{type},{title},{moment}].filter(item=>{
+      for(const key in item){
+        return item[key] !== null
+      }
+    })
+    const whereStr = utils.generateWhere(newArr)
+    const _sql = `select * from articles ${whereStr}`
+    return query(_sql)
+  }
+}
+
+// 文章查询通过id
+exports.findArticleById = (type,id) => {
+  if(type === 1){
+    const _sql = `select * from articles where id="${id}"`
+    return query(_sql)
+  }else if(type ===2){
+    const _sql = `select count(*) as count from articles where id="${id}"`
+    return query(_sql)
+  }
 }
 
 // 文章删除
@@ -715,7 +1323,7 @@ exports.deleteActive = (type,id) => {
 // 活动地点添加
 exports.addPlace = (type,value) => {
   if(type === 1){
-    const _sql = "insert into places set name=?,status=?,volume=?"
+    const _sql = "insert into places set name=?,status=?,volume=?,moment=?"
     return query(_sql,value)
   }else if (type === 2){
     const _sql = "select count(*) as count from places where name=?"
@@ -738,9 +1346,39 @@ exports.updatePlace= (type,value) => {
 }
 
 // 活动地点查询
-exports.findPlaces = (page,pageSize) => {
-  const _sql = `select * from places order by id desc limit ${(page-1)*pageSize},${page*pageSize}`
-  return query(_sql)
+exports.findPlaces = (type,value) => {
+  if(type === 1){
+    const [ page,pageSize,name,status ] = value
+    const newArr = [{name},{status}].filter(item=>{
+      for(const key in item){
+        return item[key] !== null
+      }
+    })
+    const whereStr = utils.generateWhere(newArr)
+    const _sql = `select * from places ${whereStr} order by id desc limit ${(page-1)*pageSize},${page*pageSize}`
+    return query(_sql)
+  }else if(type === 2){
+    const [ name,status ] = value
+    const newArr = [{name},{status}].filter(item=>{
+      for(const key in item){
+        return item[key] !== null
+      }
+    })
+    const whereStr = utils.generateWhere(newArr)
+    const _sql = `select * from places ${whereStr}`
+    return query(_sql)
+  }
+}
+
+// 活动地点查询通过id
+exports.findPlaceById = (type,id) => {
+  if(type === 1){
+    const _sql = `select * from places where id="${id}"`
+    return query(_sql)
+  }else if(type ===2){
+    const _sql = `select count(*) as count from places where id="${id}"`
+    return query(_sql)
+  }
 }
 
 // 活动地点删除
@@ -757,7 +1395,7 @@ exports.deletePlace = (type,id) => {
 // 题目添加
 exports.addPractice = (type,value) => {
   if(type === 1){
-    const _sql = "insert into practices set content=?,options=?,answer=?,type=?"
+    const _sql = "insert into practices set content=?,options=?,answer=?,type=?,moment=?"
     return query(_sql,value)
   }else if (type === 2){
     const _sql = "select count(*) as count from practices where content=?"
@@ -780,9 +1418,39 @@ exports.updatePractice= (type,value) => {
 }
 
 // 题目查询
-exports.findPractices = (page,pageSize) => {
-  const _sql = `select * from practices order by id desc limit ${(page-1)*pageSize},${page*pageSize}`
-  return query(_sql)
+exports.findPractices = (type,value) => {
+  if(type === 1){
+    const [page,pageSize,content,type,moment] = value
+    const newArr = [{content},{type},{moment}].filter(item=>{
+      for(const key in item){
+        return item[key] !== null
+      }
+    })
+    const whereStr = utils.generateWhere(newArr)
+    const _sql = `select * from practices ${whereStr} order by id desc limit ${(page-1)*pageSize},${page*pageSize}`
+    return query(_sql)
+  }else if (type === 2){
+    const [content,type,moment] = value
+    const newArr = [{content},{type},{moment}].filter(item=>{
+      for(const key in item){
+        return item[key] !== null
+      }
+    })
+    const whereStr = utils.generateWhere(newArr)
+    const _sql = `select * from practices ${whereStr}`
+    return query(_sql)
+  }
+}
+
+// 题目查询通过id
+exports.findPracticeById = (type,id) => {
+  if(type === 1){
+    const _sql = `select * from practices where id="${id}"`
+    return query(_sql)
+  }else if(type ===2){
+    const _sql = `select count(*) as count from practices where id="${id}"`
+    return query(_sql)
+  }
 }
 
 // 题目删除
@@ -796,10 +1464,10 @@ exports.deletePractice = (type,id) => {
   }
 }
 
-// 礼物添加
+// 礼品添加
 exports.addGift = (type,value) => {
   if(type === 1){
-    const _sql = "insert into gifts set name=?,image=?,score=?,total=?"
+    const _sql = "insert into gifts set name=?,image=?,score=?,total=?,moment=?"
     return query(_sql,value)
   }else if (type === 2){
     const _sql = "select count(*) as count from gifts where name=?"
@@ -807,7 +1475,7 @@ exports.addGift = (type,value) => {
   }
 }
 
-// 礼物修改
+// 礼品修改
 exports.updateGift= (type,value) => {
   if(type === 1){
     const _sql = "UPDATE gifts set name=?,image=?,score=?,total=? where id=?"
@@ -821,13 +1489,43 @@ exports.updateGift= (type,value) => {
   }
 }
 
-// 礼物查询
-exports.findGifts = (page,pageSize) => {
-  const _sql = `select * from gifts order by id desc limit ${(page-1)*pageSize},${page*pageSize}`
-  return query(_sql)
+// 礼品查询
+exports.findGifts = (type,value) => {
+  if(type === 1){
+    const [page,pageSize,name,moment] = value
+    const newArr = [{name},{moment}].filter(item=>{
+      for(const key in item){
+        return item[key] !== null
+      }
+    })
+    const whereStr = utils.generateWhere(newArr)
+    const _sql = `select * from gifts ${whereStr} order by id desc limit ${(page-1)*pageSize},${page*pageSize}`
+    return query(_sql)
+  }else if (type === 2){
+    const [name,moment] = value
+    const newArr = [{name},{moment}].filter(item=>{
+      for(const key in item){
+        return item[key] !== null
+      }
+    })
+    const whereStr = utils.generateWhere(newArr)
+    const _sql = `select * from gifts ${whereStr}`
+    return query(_sql)
+  }
 }
 
-// 礼物删除
+// 礼品查询通过id
+exports.findGiftById = (type,id) => {
+  if(type === 1){
+    const _sql = `select * from gifts where id="${id}"`
+    return query(_sql)
+  }else if(type ===2){
+    const _sql = `select count(*) as count from gifts where id="${id}"`
+    return query(_sql)
+  }
+}
+
+// 礼品删除
 exports.deleteGift = (type,id) => {
   if(type === 1){
     const _sql = `delete from gifts where id="${id}"`

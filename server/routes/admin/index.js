@@ -14,14 +14,22 @@ const routes = function(app){
   );
 
   // 传统接口部分
-  // 管理员注册
+  // 超级管理员注册
   app.post("/admin/api/register",controller.registerAdmin)
+  // 管理员添加
+  app.post("/admin/api/addManager",controller.addManager)
   // 管理员登录
   app.post("/admin/api/login",controller.loginAdmin);
   // 管理员查询
   app.get("/admin/api/findMangers",controller.findManagers)
+  // 管理员查询通过id
+  app.get("/admin/api/findManagerById",controller.findManagerById)
+  // 管理员更新
+  app.post("/admin/api/updateManager",controller.updateManager)
   // 管理员删除
   app.delete("/admin/api/deleteManger",controller.deleteManager)
+  // 动态路由菜单获取
+  app.get("/admin/api/getMenuList",controller.getMenuList)
 
   // 权限添加
   app.post("/admin/api/addPower",controller.addPower)
@@ -47,8 +55,10 @@ const routes = function(app){
   app.post("/admin/api/updateOrganization",controller.updateOrganization)
   // 组织查询
   app.get("/admin/api/findOrganizations",controller.findOrganizations)
+  // 组织查询通过id
+  app.get("/admin/api/findOrganizationById",controller.findOrganizationById)
   // 组织删除
-  app.delete("/admin/api/deleteOrganization",controller.deleteOrganization)
+  app.delete("/admin/api/findOrganizationById",controller.findOrganizationById)
 
   // 学院添加
   app.post("/admin/api/addFaculty",controller.addFaculty)
@@ -56,6 +66,8 @@ const routes = function(app){
   app.post("/admin/api/updateFaculty",controller.updateFaculty)
   // 学院查询
   app.get("/admin/api/findFaculties",controller.findFaculties)
+  // 学院查询通过id
+  app.get("/admin/api/findFacultyById",controller.findFacultyById)
   // 学院删除
   app.delete("/admin/api/deleteFaculty",controller.deleteFaculty)
 
@@ -93,6 +105,8 @@ const routes = function(app){
   app.post("/admin/api/updateArticle",controller.updateArticle)
   // 文章查询
   app.get("/admin/api/findArticles",controller.findArticles)
+  // 文章查询通过id
+  app.get("/admin/api/findArticleById",controller.findArticleById)
   // 文章删除
   app.delete("/admin/api/deleteArticle",controller.deleteArticle)
 
@@ -120,6 +134,8 @@ const routes = function(app){
   app.post("/admin/api/updatePlace",controller.updatePlace)
   // 活动地点查询
   app.get("/admin/api/findPlaces",controller.findPlaces)
+  // 活动地点查询通过id
+  app.get("/admin/api/findPlaceById",controller.findPlaceById)
   // 活动地点删除
   app.delete("/admin/api/deletePlace",controller.deletePlace)
 
@@ -129,16 +145,20 @@ const routes = function(app){
   app.post("/admin/api/updatePractice",controller.updatePractice)
   // 题目查询
   app.get("/admin/api/findPractices",controller.findPractices)
+  // 题目查询通过id
+  app.get("/admin/api/findPracticeById",controller.findPracticeById)
   // 题目删除
   app.delete("/admin/api/deletePractice",controller.deletePractice)
 
-  // 礼物添加
+  // 礼品添加
   app.post("/admin/api/addGift",controller.addGift)
-  // 礼物修改
+  // 礼品修改
   app.post("/admin/api/updateGift",controller.updateGift)
-  // 礼物查询
+  // 礼品查询
   app.get("/admin/api/findGifts",controller.findGifts)
-  // 礼物删除
+  // 礼品查询通过id
+  app.get("/admin/api/findGiftById",controller.findGiftById)
+  // 礼品删除
   app.delete("/admin/api/deleteGift",controller.deleteGift)
 
   // 评论添加
