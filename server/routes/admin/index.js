@@ -102,6 +102,8 @@ const routes = function(app){
   app.post("/admin/api/updateUser",controller.updateUser)
   // 用户查询
   app.get("/admin/api/findUsers",controller.findUsers)
+  // 用户查询通过id
+  app.get("/admin/api/findUserById",controller.findUserById)
   // 用户删除
   app.delete("/admin/api/deleteUser",controller.deleteUser)
 

@@ -143,6 +143,7 @@ import { addDialogConfig,editDialogConfig } from "./config/dialog-config";
 import { gernarateFormData } from "@/utils/formData-gernarate";
 import { formateString } from "@/utils/date-formate";
 import { objRemoveNullHandle } from "@/hook/useObjHandle"
+import { transFormPowerName } from "@/utils";
 // 导入网络方法
 import { getManagersRequest,deleteManager,addManager,updateManager,findManagerById,findPowers } from "@/network/home";
 // 导入pinia
@@ -402,74 +403,6 @@ const getPageData = async (queryInfo?: object) => {
     });
   }
 }
-// 权限名字转化
-const transFormPowerName = (powerName:string) =>{
-  let str:string = ''
-  switch (powerName) {
-    case 'active':
-      str = '活动'
-      break;
-    case 'article':
-      str = '文章'
-      break;
-    case 'class':
-      str = '班级'
-      break;
-    case 'comment':
-      str = '评论'
-      break;
-    case 'faculty':
-      str = '学院'
-      break;
-    case 'gift':
-      str = '礼品'
-      break;
-    case 'manager':
-      str = '管理员'
-      break;
-    case 'organization':
-      str = '组织'
-      break;
-    case 'place':
-      str = '地点'
-      break;
-    case 'practice':
-      str = '题目'
-      break;
-    case 'role':
-      str = '角色'
-      break;
-    case 'school':
-      str = '学校'
-      break;
-    case 'user':
-      str = '用户'
-      break;
-    case 'vedio':
-      str = '视频'
-      break;
-    case 'find':
-      str = '查询'
-      break;
-    case 'add':
-      str = '添加'
-      break;
-    case 'delete':
-      str = '删除'
-      break;
-    case 'modify':
-      str = '修改'
-      break;
-    case 'audit':
-      str = '审核'
-      break;
-    case 'power':
-      str = '权限'
-      break;
-  }
-  return str
-}
-
 // 获取权限数据
 const getPermission = () => {
   const menuList = useLogin.menuList

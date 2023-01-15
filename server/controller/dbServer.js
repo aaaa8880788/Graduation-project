@@ -982,55 +982,65 @@ exports.deleteClass = async (req,res) => {
 exports.addUser = async (req,res) => {
   const data = req.body
   let {type,name,avatar,powerId,organizationId,facultyId,schoolId,classId,className,cardId,phone,score,address} = data
-  powerId = JSON.stringify(powerId)
-  score = score ?? 0
-  if (!type) {
+  if (![0,1].includes(type)) {
     return res.send({
-      message: "type字段（0学生1教师）必传，",
+      message: "用户类型必传（0为学生，1为教师）",
     });
   }
   if (!name) {
     return res.send({
-      message: "name字段（姓名）必传，",
+      message: "姓名必传",
     });
   }
-  if (!facultyId) {
+  if (!['number'].includes(typeof facultyId)) {
     return res.send({
-      message: "facultyId字段（院系id）必传，",
+      message: "所属院系必传",
     });
   }
-  if (!schoolId) {
+  if (!['number'].includes(typeof schoolId)) {
     return res.send({
-      message: "schoolId字段（学校id）必传，",
-    });
-  }
-  if (!classId) {
-    return res.send({
-      message: "classId字段（专业id）必传，",
-    });
-  }
-  if (!className) {
-    return res.send({
-      message: "className字段（班级如：192）必传，",
+      message: "所属学校必传",
     });
   }
   if (!cardId) {
     return res.send({
-      message: "cardId字段（工号、学号）必传，",
+      message: "工号/学号必传",
+    });
+  }
+  if (!/\d{9}/.test(Number(cardId))) {
+    return res.send({
+      message: "工号/学号必须由九位数字组成",
     });
   }
   if (!phone) {
     return res.send({
-      message: "phone字段（手机号）必传，",
+      message: "手机号必传",
     });
   }
+  if (!/\d{11}/.test(Number(phone))) {
+    return res.send({
+      message: "手机号必传由十一位数字组成",
+    });
+  }
+  avatar = avatar ?? null
+  if(Array.isArray(powerId)){
+    powerId = JSON.stringify(powerId)
+  }else{
+    powerId = JSON.stringify([])
+  }
+  organizationId = organizationId ?? null
+  classId = classId ?? null
+  className = className ?? null
+  score = score ?? 0
+  address = address ?? null
+  let moment = new Date()
   const userCount = await dbModel.addUser(2,[cardId])
   if(userCount[0].count){
       return res.send({
         message:"数据已存在，请重新选择"
       })
   }
-  const result = await dbModel.addUser(1,[type,name,avatar,powerId,organizationId,facultyId,schoolId,classId,className,cardId,phone,score,address])
+  const result = await dbModel.addUser(1,[type,name,avatar,powerId,organizationId,facultyId,schoolId,classId,className,cardId,phone,score,address,moment])
   res.send({
     code:200,
     message:'添加成功'
@@ -1040,8 +1050,9 @@ exports.addUser = async (req,res) => {
 // 用户修改
 exports.updateUser = async (req,res) => {
   const data = req.body
-  let {type,name,avatar,powerId,organizationId,facultyId,schoolId,classId,className,cardId,phone,score,address,id} = data
-  powerId = JSON.stringify(powerId)
+  const params = req.query
+  let {type,name,avatar,powerId,organizationId,facultyId,schoolId,classId,className,cardId,phone,score,address} = data
+  let {id} = params
   if([null,undefined].includes(id) || !['number','string'].includes(typeof id)){
     return res.send({
       message: "id字段必传",
@@ -1057,6 +1068,11 @@ exports.updateUser = async (req,res) => {
   type = type ?? originData[0].type
   name = name ?? originData[0].name
   avatar = avatar ?? originData[0].avatar
+  if(Array.isArray(powerId)){
+    powerId = JSON.stringify(powerId)
+  }else{
+    powerId = originData[0].powerId
+  }
   organizationId = organizationId ?? originData[0].organizationId
   facultyId = facultyId ?? originData[0].facultyId
   schoolId = schoolId ?? originData[0].schoolId
@@ -1076,14 +1092,50 @@ exports.updateUser = async (req,res) => {
 // 用户查询
 exports.findUsers = async (req,res) => {
   const params = req.query
-  let {page,pageSize} = params
+  let {page,pageSize,name,type,cardId,moment} = params
   page = page ?? 1
   pageSize = pageSize ?? 10
-  const result = await dbModel.findUsers(page,pageSize)
+  name = name ? name : null
+  type = type ? type : null
+  cardId = cardId ? cardId : null
+  moment = moment ? moment : null
+  const result = await dbModel.findUsers(1,[page,pageSize,name,type,cardId,moment])
+  result.forEach(async item=>{
+    item.powerId = JSON.parse(item.powerId)
+    item.organizationData = (await dbModel.findUsers(3,[item.organizationId]))[0]
+  })
+  const total = (await dbModel.findUsers(2,[name,type,cardId,moment])).length
   res.send({
     code:200,
     message:"查询成功",
-    data:result
+    data:result,
+    total:total
+  })
+}
+
+// 用户查询通过id
+exports.findUserById = async(req,res) => {
+  const params = req.query
+  let {id} = params
+  if(!['number','string'].includes(typeof id) && [null,undefined].includes(id)){
+    return res.send({
+      message:'请传入正确格式的id'
+    })
+  }
+  const count = await dbModel.findUserById(2,id)
+  if(!count[0].count){
+    return res.send({
+      message:"数据不存在，查询失败"
+    })
+  }
+  const result = await dbModel.findUserById(1,id)
+  result.forEach(item=>{
+    item.powerId = JSON.parse(item.powerId)
+  })
+  res.send({
+    code:200,
+    message:"查询成功",
+    data:result[0]
   })
 }
 
@@ -1167,7 +1219,7 @@ exports.updateArticle = async (req,res) => {
   title = title ?? originData[0].title
   type = type ?? originData[0].type
   body = body ?? originData[0].body
-  if(!Array.isArray(supportUser)){
+  if(Array.isArray(supportUser)){
     supportUser = JSON.stringify(supportUser)
   }else{
     supportUser = originData[0].supportUser

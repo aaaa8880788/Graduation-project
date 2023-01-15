@@ -109,12 +109,14 @@
                   <Plus />
                 </el-icon>  
               </el-upload>
-              <el-button 
-                v-if="modelValue[`${item.field}`]" 
-                type="danger"
-                style="marginLeft: 30px;"
-                @click="vedioUploadDeleteBtnClickHandle(item.field)"
-              >删除</el-button>
+              <template v-if="!item.otherOptions.disabled">
+                <el-button 
+                  v-if="modelValue[`${item.field}`]" 
+                  type="danger"
+                  style="marginLeft: 30px;"
+                  @click="vedioUploadDeleteBtnClickHandle(item.field)"
+                >删除</el-button>
+              </template>
             </template>
             <template v-if="item.type === 'quillEditor'">
               <quillEditor

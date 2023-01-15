@@ -438,6 +438,12 @@ const powerData = [
     powerName: "find",
     moment:new Date().getTime()
   },
+  {
+    name: "user",
+    type: 1,
+    powerName: "power",
+    moment:new Date().getTime()
+  },
   // 视频
   {
     name: "vedio",
@@ -553,13 +559,13 @@ let users = `create table if not exists users(
   organizationId INT COMMENT '组织id',
   facultyId INT NOT NULL COMMENT '院系id',
   schoolId INT NOT NULL COMMENT '学校id',
-  classId INT NOT NULL COMMENT '专业id',
-  className INT NOT NULL COMMENT '班级如：192',
+  classId INT COMMENT '专业id',
+  className VARCHAR(1000) COMMENT '班级如：192班',
   cardId VARCHAR(1000) NOT NULL COMMENT '学号、工号',
   phone VARCHAR(1000) NOT NULL COMMENT '手机号',
-  score INT NOT NULL COMMENT '积分值',
+  score INT COMMENT '积分值',
   address VARCHAR(1000) COMMENT '收货地址',
-  moment varchar(100) NOT NULL COMMENT '创建时间',
+  moment varchar(1000) NOT NULL COMMENT '创建时间',
   PRIMARY KEY (id) 
 )`
 
@@ -1219,7 +1225,7 @@ exports.deleteClass = (type,id) => {
 // 用户添加
 exports.addUser = (type,value) => {
   if(type === 1){
-    const _sql = "insert into users set type=?,name=?,avatar=?,powerId=?,organizationId=?,facultyId=?,schoolId=?,classId=?,className=?,cardId=?,phone=?,score=?,address=?"
+    const _sql = "insert into users set type=?,name=?,avatar=?,powerId=?,organizationId=?,facultyId=?,schoolId=?,classId=?,className=?,cardId=?,phone=?,score=?,address=?,moment=?"
     return query(_sql,value)
   }else if (type === 2){
     const _sql = "select count(*) as count from users where cardId=?"
@@ -1242,9 +1248,43 @@ exports.updateUser= (type,value) => {
 }
 
 // 用户查询
-exports.findUsers = (page,pageSize) => {
-  const _sql = `select * from users order by id desc limit ${(page-1)*pageSize},${page*pageSize}`
-  return query(_sql)
+exports.findUsers = (type,value) => {
+  if(type === 1){
+    const [page,pageSize,name,type,cardId,moment] = value
+    const newArr = [{name},{type},{cardId},{moment}].filter(item=>{
+      for(const key in item){
+        return item[key] !== null
+      }
+    })
+    const whereStr = utils.generateWhere(newArr)
+    const _sql = `select * from users ${whereStr} order by id desc limit ${(page-1)*pageSize},${page*pageSize}`
+    return query(_sql)
+  }else if (type === 2){
+    const [name,type,cardId,moment] = value
+    const newArr = [{name},{type},{cardId},{moment}].filter(item=>{
+      for(const key in item){
+        return item[key] !== null
+      }
+    })
+    const whereStr = utils.generateWhere(newArr)
+    const _sql = `select * from users ${whereStr}`
+    return query(_sql)
+  }else if (type ===3){
+    const [organizationId] = value
+    const _sql = `select * from faculties where id=${organizationId}`
+    return query(_sql)
+  }
+}
+
+// 用户查询通过id
+exports.findUserById = (type,id) => {
+  if(type === 1){
+    const _sql = `select * from users where id="${id}"`
+    return query(_sql)
+  }else if(type ===2){
+    const _sql = `select count(*) as count from users where id="${id}"`
+    return query(_sql)
+  }
 }
 
 // 用户删除
