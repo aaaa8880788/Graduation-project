@@ -404,7 +404,8 @@ exports.addRole = async (req,res) => {
         message:"该角色已存在，请重新选择"
       })
   }
-  const result = await dbModel.addRole(1,[name,introduce,request])
+  let moment = new Date()
+  const result = await dbModel.addRole(1,[name,introduce,request,moment])
   res.send({
     code:200,
     message:'角色添加成功'
@@ -414,7 +415,9 @@ exports.addRole = async (req,res) => {
 // 角色修改
 exports.updateRole = async (req,res) => {
   const data = req.body
-  let {name,introduce,request,id} = data
+  const params = req.query
+  let {name,introduce,request} = data
+  let {id} = params
   if([null,undefined].includes(id) || !['number','string'].includes(typeof id)){
     return res.send({
       message: "id字段必传",
@@ -440,14 +443,41 @@ exports.updateRole = async (req,res) => {
 // 角色查询
 exports.findRoles = async (req,res) => {
   const params = req.query
-  let {page,pageSize} = params
+  let {page,pageSize,name,moment} = params
   page = page ?? 1
   pageSize = pageSize ?? 10
-  const result = await dbModel.findRoles(page,pageSize)
+  name = name ? name : null
+  moment = moment ? moment : null
+  const result = await dbModel.findRoles(1,[page,pageSize,name,moment])
+  const total = (await dbModel.findRoles(2,[name,moment])).length
   res.send({
     code:200,
     message:"查询成功",
-    data:result
+    data:result,
+    total:total
+  })
+}
+
+// 角色查询通过id
+exports.findRoleById = async(req,res) => {
+  const params = req.query
+  let {id} = params
+  if(!['number','string'].includes(typeof id) && [null,undefined].includes(id)){
+    return res.send({
+      message:'请传入正确格式的id'
+    })
+  }
+  const count = await dbModel.findRoleById(2,id)
+  if(!count[0].count){
+    return res.send({
+      message:"数据不存在，查询失败"
+    })
+  }
+  const result = await dbModel.findRoleById(1,id)
+  res.send({
+    code:200,
+    message:"查询成功",
+    data:result[0]
   })
 }
 
@@ -701,16 +731,17 @@ exports.addSchool = async (req,res) => {
   let {name,logo} = data
   if (!name) {
     return res.send({
-      message: "name字段（学校名字：仲恺农业工程学院）必传，",
+      message: "学校名字必传，",
     });
   }
-  const facultyCount = await dbModel.addSchool(2,[name])
-  if(facultyCount[0].count){
+  let moment = new Date()
+  const schoolCount = await dbModel.addSchool(2,[name])
+  if(schoolCount[0].count){
       return res.send({
         message:"该学校已存在，请重新选择"
       })
   }
-  const result = await dbModel.addSchool(1,[name,logo])
+  const result = await dbModel.addSchool(1,[name,logo,moment])
   res.send({
     code:200,
     message:'学校添加成功'
@@ -720,7 +751,9 @@ exports.addSchool = async (req,res) => {
 // 学校修改
 exports.updateSchool = async (req,res) => {
   const data = req.body
-  let {name,logo,id} = data
+  const params = req.query
+  let {name,logo} = data
+  let {id} = params
   if([null,undefined].includes(id) || !['number','string'].includes(typeof id)){
     return res.send({
       message: "id字段必传",
@@ -745,14 +778,41 @@ exports.updateSchool = async (req,res) => {
 // 学校查询
 exports.findSchools = async (req,res) => {
   const params = req.query
-  let {page,pageSize} = params
+  let {page,pageSize,name,moment} = params
   page = page ?? 1
   pageSize = pageSize ?? 10
-  const result = await dbModel.findSchools(page,pageSize)
+  name = name ? name : null
+  moment = moment ? moment : null
+  const result = await dbModel.findSchools(1,[page,pageSize,name,moment])
+  const total = (await dbModel.findSchools(2,[name,moment])).length
   res.send({
     code:200,
     message:"查询成功",
-    data:result
+    data:result,
+    total:total
+  })
+}
+
+// 学校查询通过id
+exports.findSchoolById = async(req,res) => {
+  const params = req.query
+  let {id} = params
+  if(!['number','string'].includes(typeof id) && [null,undefined].includes(id)){
+    return res.send({
+      message:'请传入正确格式的id'
+    })
+  }
+  const count = await dbModel.findSchoolById(2,id)
+  if(!count[0].count){
+    return res.send({
+      message:"数据不存在，查询失败"
+    })
+  }
+  const result = await dbModel.findSchoolById(1,id)
+  res.send({
+    code:200,
+    message:"查询成功",
+    data:result[0]
   })
 }
 
@@ -781,7 +841,6 @@ exports.deleteSchool = async (req,res) => {
 exports.addClass = async (req,res) => {
   const data = req.body
   let {name,title,classData,facultyId} = data
-  classData = JSON.stringify(classData)
   if (!name) {
     return res.send({
       message: "name字段（专业名：通信工程）必传，",
@@ -792,9 +851,9 @@ exports.addClass = async (req,res) => {
       message: "title字段（专业简称：通信）必传，",
     });
   }
-  if (!classData) {
+  if (!Array.isArray(classData)) {
     return res.send({
-      message: "className字段（班级数组如：[192,202]）必传，",
+      message: "classData字段（班级数组如：['191班','192班']）必传，",
     });
   }
   if (!facultyId) {
@@ -802,13 +861,15 @@ exports.addClass = async (req,res) => {
       message: "facultyId字段（院系id）必传，",
     });
   }
-  const classCount = await dbModel.addClass(2,[name,classData,facultyId])
+  let moment = new Date()
+  classData = JSON.stringify(classData)
+  const classCount = await dbModel.addClass(2,[name,facultyId])
   if(classCount[0].count){
       return res.send({
         message:"数据已存在，请重新选择"
       })
   }
-  const result = await dbModel.addClass(1,[name,title,classData,facultyId])
+  const result = await dbModel.addClass(1,[name,title,classData,facultyId,moment])
   res.send({
     code:200,
     message:'添加成功'
@@ -818,8 +879,9 @@ exports.addClass = async (req,res) => {
 // 专业班级修改
 exports.updateClass = async (req,res) => {
   const data = req.body
-  let {name,title,classData,facultyId,id} = data
-  classData = JSON.stringify(classData)
+  const params = req.query
+  let {name,title,classData,facultyId} = data
+  let {id} = params
   if([null,undefined].includes(id) || !['number','string'].includes(typeof id)){
     return res.send({
       message: "id字段必传",
@@ -834,8 +896,12 @@ exports.updateClass = async (req,res) => {
   const originData = await dbModel.updateClass(3,[id])
   name = name ?? originData[0].name
   title = title ?? originData[0].title
-  classData = classData ?? originData[0].classData
   facultyId = facultyId ?? originData[0].facultyId
+  if(Array.isArray(classData)){
+    classData = JSON.stringify(classData)
+  }else{
+    classData = originData[0].classData
+  }
   const result = await dbModel.updateClass(1,[name,title,classData,facultyId,id])
   res.send({
     code:200,
@@ -846,14 +912,48 @@ exports.updateClass = async (req,res) => {
 // 专业班级查询
 exports.findClasses = async (req,res) => {
   const params = req.query
-  let {page,pageSize} = params
+  let {page,pageSize,name,moment} = params
   page = page ?? 1
   pageSize = pageSize ?? 10
-  const result = await dbModel.findClasses(page,pageSize)
+  name = name ? name : null
+  moment = moment ? moment : null
+  const result = await dbModel.findClasses(1,[page,pageSize,name,moment])
+  result.forEach(async item=>{
+    item.classData = JSON.parse(item.classData)
+    item.facultyData = (await dbModel.findClasses(3,[item.facultyId]))[0]
+  })
+  const total = (await dbModel.findClasses(2,[name,moment])).length
   res.send({
     code:200,
     message:"查询成功",
-    data:result
+    data:result,
+    total:total
+  })
+}
+
+// 专业班级查询通过id
+exports.findClassById = async(req,res) => {
+  const params = req.query
+  let {id} = params
+  if(!['number','string'].includes(typeof id) && [null,undefined].includes(id)){
+    return res.send({
+      message:'请传入正确格式的id'
+    })
+  }
+  const count = await dbModel.findClassById(2,id)
+  if(!count[0].count){
+    return res.send({
+      message:"数据不存在，查询失败"
+    })
+  }
+  const result = await dbModel.findClassById(1,id)
+  result.forEach(item=>{
+    item.classData = JSON.parse(item.classData)
+  })
+  res.send({
+    code:200,
+    message:"查询成功",
+    data:result[0]
   })
 }
 
@@ -1014,12 +1114,12 @@ exports.addArticle = async (req,res) => {
   let {title,type,body,supportUser} = data
   if (!title) {
     return res.send({
-      message: "title字段（文章标题）必传",
+      message: "文章标题必传",
     });
   }
   if (!([0,1,2,3,4,5].includes(type))) {
     return res.send({
-      message: "type字段（文章类型0时事要闻1新思想2党史3党建）必传",
+      message: "文章类型（0时事要闻1新思想2党史3党建）",
     });
   }
   if (!body) {
@@ -1028,8 +1128,11 @@ exports.addArticle = async (req,res) => {
     });
   }
   let moment = new Date()
-  body = JSON.stringify(body)
-  supportUser = supportUser ? JSON.stringify(supportUser) : JSON.stringify([])
+  if(![undefined,null].includes(supportUser)){
+    supportUser = JSON.stringify(supportUser)
+  }else{
+    supportUser = JSON.stringify([])
+  }
   const articleCount = await dbModel.addArticle(2,[title,type])
   if(articleCount[0].count){
       return res.send({
@@ -1061,10 +1164,14 @@ exports.updateArticle = async (req,res) => {
     })
   }
   const originData = await dbModel.updateArticle(3,[id])
-  title = title ? title : originData[0].title
-  type = type ? type : originData[0].type
-  body = body ? JSON.stringify(body) :originData[0].body
-  supportUser = supportUser ? JSON.stringify(supportUser) : originData[0].supportUser
+  title = title ?? originData[0].title
+  type = type ?? originData[0].type
+  body = body ?? originData[0].body
+  if(!Array.isArray(supportUser)){
+    supportUser = JSON.stringify(supportUser)
+  }else{
+    supportUser = originData[0].supportUser
+  }
   const result = await dbModel.updateArticle(1,[title,type,body,supportUser,id])
   res.send({
     code:200,
@@ -1112,7 +1219,6 @@ exports.findArticleById = async(req,res) => {
   const result = await dbModel.findArticleById(1,id)
   result.forEach(item=>{
     item.supportUser = JSON.parse(item.supportUser)
-    item.body = JSON.parse(item.body)
   })
   res.send({
     code:200,
@@ -1146,34 +1252,39 @@ exports.deleteArticle = async (req,res) => {
 exports.addVedio = async (req,res) => {
   const data = req.body
   let {title,type,body,vedio,supportUser} = data
-  supportUser = JSON.stringify(supportUser)
   if (!title) {
     return res.send({
-      message: "title字段（视频标题）必传",
+      message: "视频标题必传",
     });
   }
   if (!([0,1,2,3,4,5].includes(type))) {
     return res.send({
-      message: "type字段（视频类型0时事要闻1新思想2党史3党建）必传",
+      message: "视频类型（0时事要闻1新思想2党史3党建）必传",
     });
   }
   if (!body) {
     return res.send({
-      message: "body字段（视频内容）必传",
+      message: "视频内容必传",
     });
   }
   if (!vedio) {
     return res.send({
-      message: "vedio字段（视频地址）必传",
+      message: "视频文件必传",
     });
   }
-  const articleCount = await dbModel.addVedio(2,[title,type])
-  if(articleCount[0].count){
+  let moment = new Date()
+  if(![undefined,null].includes(supportUser)){
+    supportUser = JSON.stringify(supportUser)
+  }else{
+    supportUser = JSON.stringify([])
+  }
+  const vedioCount = await dbModel.addVedio(2,[title,type])
+  if(vedioCount[0].count){
       return res.send({
         message:"数据已存在，请重新选择"
       })
   }
-  const result = await dbModel.addVedio(1,[title,type,body,vedio,supportUser])
+  const result = await dbModel.addVedio(1,[title,type,body,vedio,supportUser,moment])
   res.send({
     code:200,
     message:'添加成功'
@@ -1183,8 +1294,9 @@ exports.addVedio = async (req,res) => {
 // 视频修改
 exports.updateVedio = async (req,res) => {
   const data = req.body
-  let {title,type,body,vedio,supportUser,id} = data
-  supportUser = JSON.stringify(supportUser)
+  const params = req.query
+  let {title,type,body,vedio,supportUser} = data
+  let {id} = params
   if([null,undefined].includes(id) || !['number','string'].includes(typeof id)){
     return res.send({
       message: "id字段必传",
@@ -1201,7 +1313,11 @@ exports.updateVedio = async (req,res) => {
   type = type ?? originData[0].type
   body = body ?? originData[0].body
   vedio = vedio ?? originData[0].vedio
-  supportUser = supportUser ?? originData[0].supportUser
+  if(![undefined,null].includes(supportUser)){
+    supportUser = JSON.stringify(supportUser)
+  }else{
+    supportUser = originData[0].supportUser
+  }
   const result = await dbModel.updateVedio(1,[title,type,body,vedio,supportUser,id])
   res.send({
     code:200,
@@ -1212,16 +1328,51 @@ exports.updateVedio = async (req,res) => {
 // 视频查询
 exports.findVedioes = async (req,res) => {
   const params = req.query
-  let {page,pageSize} = params
+  let {page,pageSize,title,type,moment} = params
   page = page ?? 1
   pageSize = pageSize ?? 10
-  const result = await dbModel.findVedioes(page,pageSize)
+  type = type ? type : null
+  title = title ? title : null
+  moment = moment ? moment : null
+  const result = await dbModel.findVedioes(1,[page,pageSize,type,title,moment])
+  result.forEach(item=>{
+    item.supportUser = JSON.parse(item.supportUser)
+  })
+  const total = (await dbModel.findVedioes(2,[type,title,moment])).length
   res.send({
     code:200,
     message:"查询成功",
-    data:result
+    data:result,
+    total:total
   })
 }
+
+// 视频查询通过id
+exports.findVedioById = async(req,res) => {
+  const params = req.query
+  let {id} = params
+  if(!['number','string'].includes(typeof id) && [null,undefined].includes(id)){
+    return res.send({
+      message:'请传入正确格式的id'
+    })
+  }
+  const count = await dbModel.findVedioById(2,id)
+  if(!count[0].count){
+    return res.send({
+      message:"数据不存在，查询失败"
+    })
+  }
+  const result = await dbModel.findVedioById(1,id)
+  result.forEach(item=>{
+    item.supportUser = JSON.parse(item.supportUser)
+  })
+  res.send({
+    code:200,
+    message:"查询成功",
+    data:result[0]
+  })
+}
+
 
 // 视频删除
 exports.deleteVedio = async (req,res) => {
@@ -1923,6 +2074,43 @@ exports.uploadAvatar = async (req, res) => {
   res.send({
     code:200,
     message:'图片上传成功',
+    data:file
+  });
+}
+
+// 视频上传接口部分
+exports.uploadVedioSingle = (type) => {
+  // 上传地址
+  const vedioDest = path.join(__dirname, "../uploads/vedio");
+  //将视频放到服务器
+  const vedioStorage = multer.diskStorage({
+    // 如果你提供的 destination 是一个函数，你需要负责创建文件夹
+    destination: vedioDest,
+    //给上传文件重命名，获取添加后缀名
+    filename: function (req, file, cb) {
+      cb(null,`${new Date().getTime()}.mp4`);
+    },
+  });
+  // 创建multer的实例对象
+  const vedioUpload = multer({
+    storage: vedioStorage,
+  });
+  // upload.single() 是一个局部生效的中间件，用来解析 FormData 格式的表单数据
+  // 将文件类型的数据，解析并挂载到 req.file 属性中
+  // 将文本类型的数据，解析并挂载到 req.body 属性中
+  return vedioUpload.single(type)
+}
+exports.uploadVedio = async (req, res) => {
+  if(!req.file){
+    return res.send({
+      message:'请上传视频'
+    })
+  }
+  const file = req.file;
+  file.url = `http://localhost:${config.port}/uploads/vedio/${file.filename}`;
+  res.send({
+    code:200,
+    message:'视频上传成功',
     data:file
   });
 }

@@ -42,7 +42,7 @@ const getMenuName = (name:string) =>{
       icon = 'Notebook'
       break;
     case 'class':
-      str = '班级管理'
+      str = '专业管理'
       icon = 'Discount'
       break;
     case 'comment':

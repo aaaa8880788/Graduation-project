@@ -7,7 +7,11 @@ import type {
   FacultyId,
   GiftId,
   OrganizationId,
-  PracticeId
+  PracticeId,
+  VedioId,
+  SchoolId,
+  RoleId,
+  ClassId
 } from "./type";
 import { dRequest1 } from "../index";
 
@@ -422,6 +426,206 @@ export function updatePractice(url: string, data:any, id: PracticeId) {
 
 // 删除题目
 export function deletePractice(url: string, data:any) {  
+  return dRequest1.delete({
+    url: url,
+    data: data
+  });
+}
+
+// 获取视频列表
+export function getVedioesRequest(url: string, findParams:findType) {  
+  const { page,pageSize,queryInfo } = findParams
+  return dRequest1.get({
+    url: url,
+    params: {
+      page,
+      pageSize,
+      ...queryInfo
+    },
+  });
+}
+
+// 通过id获取视频信息
+export function findVedioById(url: string, id: VedioId) {  
+  return dRequest1.get({
+    url: url,
+    params: {
+      id
+    }
+  });
+}
+
+// 添加视频
+export function addVedio(url: string, data:any) {  
+  return dRequest1.post({
+    url: url,
+    data: data
+  });
+}
+
+// 编辑视频
+export function updateVedio(url: string, data:any, id: VedioId) {  
+  return dRequest1.post({
+    url: url,
+    data: data,
+    params:{
+      id
+    }
+  });
+}
+
+// 删除视频
+export function deleteVedio(url: string, data:any) {  
+  return dRequest1.delete({
+    url: url,
+    data: data
+  });
+}
+
+// 获取学校列表
+export function getSchoolsRequest(url: string, findParams:findType) {  
+  const { page,pageSize,queryInfo } = findParams
+  return dRequest1.get({
+    url: url,
+    params: {
+      page,
+      pageSize,
+      ...queryInfo
+    },
+  });
+}
+
+// 通过id获取学校信息
+export function findSchoolById(url: string, id: SchoolId) {  
+  return dRequest1.get({
+    url: url,
+    params: {
+      id
+    }
+  });
+}
+
+// 添加学校
+export function addSchool(url: string, data:any) {  
+  return dRequest1.post({
+    url: url,
+    data: data
+  });
+}
+
+// 编辑学校
+export function updateSchool(url: string, data:any, id: SchoolId) {  
+  return dRequest1.post({
+    url: url,
+    data: data,
+    params:{
+      id
+    }
+  });
+}
+
+// 删除学校
+export function deleteSchool(url: string, data:any) {  
+  return dRequest1.delete({
+    url: url,
+    data: data
+  });
+}
+
+// 获取角色列表
+export function getRolesRequest(url: string, findParams:findType) {  
+  const { page,pageSize,queryInfo } = findParams
+  return dRequest1.get({
+    url: url,
+    params: {
+      page,
+      pageSize,
+      ...queryInfo
+    },
+  });
+}
+
+// 通过id获取角色信息
+export function findRoleById(url: string, id: RoleId) {  
+  return dRequest1.get({
+    url: url,
+    params: {
+      id
+    }
+  });
+}
+
+// 添加角色
+export function addRole(url: string, data:any) {  
+  return dRequest1.post({
+    url: url,
+    data: data
+  });
+}
+
+// 编辑角色
+export function updateRole(url: string, data:any, id: RoleId) {  
+  return dRequest1.post({
+    url: url,
+    data: data,
+    params:{
+      id
+    }
+  });
+}
+
+// 删除角色
+export function deleteRole(url: string, data:any) {  
+  return dRequest1.delete({
+    url: url,
+    data: data
+  });
+}
+
+// 获取班级列表
+export function getClassesRequest(url: string, findParams:findType) {  
+  const { page,pageSize,queryInfo } = findParams
+  return dRequest1.get({
+    url: url,
+    params: {
+      page,
+      pageSize,
+      ...queryInfo
+    },
+  });
+}
+
+// 通过id获取班级信息
+export function findClassById(url: string, id: ClassId) {  
+  return dRequest1.get({
+    url: url,
+    params: {
+      id
+    }
+  });
+}
+
+// 添加班级
+export function addClass(url: string, data:any) {  
+  return dRequest1.post({
+    url: url,
+    data: data
+  });
+}
+
+// 编辑班级
+export function updateClass(url: string, data:any, id: ClassId) {  
+  return dRequest1.post({
+    url: url,
+    data: data,
+    params:{
+      id
+    }
+  });
+}
+
+// 删除班级
+export function deleteClass(url: string, data:any) {  
   return dRequest1.delete({
     url: url,
     data: data

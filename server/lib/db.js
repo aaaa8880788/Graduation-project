@@ -855,7 +855,7 @@ exports.deletePower = (type,id) => {
 // 角色添加
 exports.addRole = (type,value) => {
   if(type === 1){
-    const _sql = "insert into roles set name=?,introduce=?,request=?"
+    const _sql = "insert into roles set name=?,introduce=?,request=?,moment=?"
     return query(_sql,value)
   }else if (type === 2){
     const _sql = "select count(*) as count from roles where name=?"
@@ -878,9 +878,39 @@ exports.updateRole= (type,value) => {
 }
 
 // 角色查询
-exports.findRoles = (page,pageSize) => {
-  const _sql = `select * from roles order by id desc limit ${(page-1)*pageSize},${page*pageSize}`
-  return query(_sql)
+exports.findRoles = (type,value) => {
+  if(type === 1){
+    const [page,pageSize,name,moment] = value
+    const newArr = [{name},{moment}].filter(item=>{
+      for(const key in item){
+        return item[key] !== null
+      }
+    })
+    const whereStr = utils.generateWhere(newArr)
+    const _sql = `select * from roles ${whereStr} order by id desc limit ${(page-1)*pageSize},${page*pageSize}`
+    return query(_sql)
+  }else if (type === 2){
+    const [name,moment] = value
+    const newArr = [{name},{moment}].filter(item=>{
+      for(const key in item){
+        return item[key] !== null
+      }
+    })
+    const whereStr = utils.generateWhere(newArr)
+    const _sql = `select * from roles ${whereStr}`
+    return query(_sql)
+  }
+}
+
+// 角色查询通过id
+exports.findRoleById = (type,id) => {
+  if(type === 1){
+    const _sql = `select * from roles where id="${id}"`
+    return query(_sql)
+  }else if(type ===2){
+    const _sql = `select count(*) as count from roles where id="${id}"`
+    return query(_sql)
+  }
 }
 
 // 角色删除
@@ -1041,7 +1071,7 @@ exports.deleteFaculty = (type,id) => {
 // 学校添加
 exports.addSchool = (type,value) => {
   if(type === 1){
-    const _sql = "insert into schools set name=?,logo=?"
+    const _sql = "insert into schools set name=?,logo=?,moment=?"
     return query(_sql,value)
   }else if (type === 2){
     const _sql = "select count(*) as count from schools where name=?"
@@ -1064,9 +1094,39 @@ exports.updateSchool= (type,value) => {
 }
 
 // 学校查询
-exports.findSchools = (page,pageSize) => {
-  const _sql = `select * from schools order by id desc limit ${(page-1)*pageSize},${page*pageSize}`
-  return query(_sql)
+exports.findSchools = (type,value) => {
+  if(type === 1){
+    const [page,pageSize,name,moment] = value
+    const newArr = [{name},{moment}].filter(item=>{
+      for(const key in item){
+        return item[key] !== null
+      }
+    })
+    const whereStr = utils.generateWhere(newArr)
+    const _sql = `select * from schools ${whereStr} order by id desc limit ${(page-1)*pageSize},${page*pageSize}`
+    return query(_sql)
+  }else if (type === 2){
+    const [name,moment] = value
+    const newArr = [{name},{moment}].filter(item=>{
+      for(const key in item){
+        return item[key] !== null
+      }
+    })
+    const whereStr = utils.generateWhere(newArr)
+    const _sql = `select * from schools ${whereStr}`
+    return query(_sql)
+  }
+}
+
+// 学校查询通过id
+exports.findSchoolById = (type,id) => {
+  if(type === 1){
+    const _sql = `select * from schools where id="${id}"`
+    return query(_sql)
+  }else if(type ===2){
+    const _sql = `select count(*) as count from schools where id="${id}"`
+    return query(_sql)
+  }
 }
 
 // 学校删除
@@ -1083,10 +1143,10 @@ exports.deleteSchool = (type,id) => {
 // 专业班级添加
 exports.addClass = (type,value) => {
   if(type === 1){
-    const _sql = "insert into classes set name=?,title=?,classData=?,facultyId=?"
+    const _sql = "insert into classes set name=?,title=?,classData=?,facultyId=?,moment=?"
     return query(_sql,value)
   }else if (type === 2){
-    const _sql = "select count(*) as count from classes where name=? and classData=? and facultyId=?"
+    const _sql = "select count(*) as count from classes where name=? and facultyId=?"
     return query(_sql,value)
   }
 }
@@ -1106,9 +1166,43 @@ exports.updateClass= (type,value) => {
 }
 
 // 专业班级查询
-exports.findClasses = (page,pageSize) => {
-  const _sql = `select * from classes order by id desc limit ${(page-1)*pageSize},${page*pageSize}`
-  return query(_sql)
+exports.findClasses = (type,value) => {
+  if(type === 1){
+    const [page,pageSize,name,moment] = value
+    const newArr = [{name},{moment}].filter(item=>{
+      for(const key in item){
+        return item[key] !== null
+      }
+    })
+    const whereStr = utils.generateWhere(newArr)
+    const _sql = `select * from classes ${whereStr} order by id desc limit ${(page-1)*pageSize},${page*pageSize}`
+    return query(_sql)
+  }else if (type === 2){
+    const [name,moment] = value
+    const newArr = [{name},{moment}].filter(item=>{
+      for(const key in item){
+        return item[key] !== null
+      }
+    })
+    const whereStr = utils.generateWhere(newArr)
+    const _sql = `select * from classes ${whereStr}`
+    return query(_sql)
+  }else if (type ===3){
+    const [facultyId] = value
+    const _sql = `select * from faculties where id=${facultyId}`
+    return query(_sql)
+  }
+}
+
+// 专业班级查询通过id
+exports.findClassById = (type,id) => {
+  if(type === 1){
+    const _sql = `select * from classes where id="${id}"`
+    return query(_sql)
+  }else if(type ===2){
+    const _sql = `select count(*) as count from classes where id="${id}"`
+    return query(_sql)
+  }
 }
 
 // 专业班级删除
@@ -1239,7 +1333,7 @@ exports.deleteArticle = (type,id) => {
 // 视频添加
 exports.addVedio = (type,value) => {
   if(type === 1){
-    const _sql = "insert into vedioes set title=?,type=?,body=?,vedio=?,supportUser=?"
+    const _sql = "insert into vedioes set title=?,type=?,body=?,vedio=?,supportUser=?,moment=?"
     return query(_sql,value)
   }else if (type === 2){
     const _sql = "select count(*) as count from vedioes where title=? and type=?"
@@ -1262,9 +1356,39 @@ exports.updateVedio= (type,value) => {
 }
 
 // 视频查询
-exports.findVedioes = (page,pageSize) => {
-  const _sql = `select * from vedioes order by id desc limit ${(page-1)*pageSize},${page*pageSize}`
-  return query(_sql)
+exports.findVedioes = (type,value) => {
+  if(type === 1){
+    const [page,pageSize,type,title,moment] = value
+    const newArr = [{type},{title},{moment}].filter(item=>{
+      for(const key in item){
+        return item[key] !== null
+      }
+    })
+    const whereStr = utils.generateWhere(newArr)
+    const _sql = `select * from vedioes ${whereStr} order by id desc limit ${(page-1)*pageSize},${page*pageSize}`
+    return query(_sql)
+  }else if (type === 2){
+    const [type,title,moment] = value
+    const newArr = [{type},{title},{moment}].filter(item=>{
+      for(const key in item){
+        return item[key] !== null
+      }
+    })
+    const whereStr = utils.generateWhere(newArr)
+    const _sql = `select * from vedioes ${whereStr}`
+    return query(_sql)
+  }
+}
+
+// 视频查询通过id
+exports.findVedioById = (type,id) => {
+  if(type === 1){
+    const _sql = `select * from vedioes where id="${id}"`
+    return query(_sql)
+  }else if(type ===2){
+    const _sql = `select count(*) as count from vedioes where id="${id}"`
+    return query(_sql)
+  }
 }
 
 // 视频删除

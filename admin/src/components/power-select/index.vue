@@ -7,24 +7,15 @@
       center
       destroy-on-close
       @closed="closeHandle">
-    <h1>前台权限</h1>
+    <h1>{{ title }}</h1>
     <el-tree 
-      ref="webTreeRef"
+      ref="treeRef"
       show-checkbox
       highlight-current
       node-key="id"
-      :data="webTreeData"
+      :data="treeData"
       :props="defaultProps"
-      @check="webCheckChangeHandle"/>
-    <h1>后台权限</h1>
-    <el-tree 
-      ref="adminTreeRef"
-      show-checkbox
-      highlight-current
-      node-key="id"
-      :data="adminTreeData"
-      :props="defaultProps"
-      @check="adminCheckChangeHandle"/>
+      @check="checkChangeHandle"/>
     <template #footer>
       <span class="dialog-footer">
         <el-button @click="closeBtnClick">
@@ -44,27 +35,18 @@
 import { nextTick, ref } from 'vue'
 import { ElTree } from 'element-plus'
 
-interface Tree {
-  id: number
-  label: string
-  moment?:string
-  name?:string
-  powerName?:string
-  children?: Tree[]
-}
-
 interface Props {
   dialogTitle?: string; //对话框标题
-  webTreeData?:[]
-  adminTreeData?:[],
+  title?: string;
+  treeData:[],
   treeSelectData?:[]
 }
 
 // 定义属性
 const props = withDefaults(defineProps<Props>(), {
   dialogTitle: "默认标题",
-  webTreeData: () => [],
-  adminTreeData: () => [],
+  title: "权限分配",
+  treeData: () => [],
   treeSelectData: () => []
 });
 
@@ -78,14 +60,10 @@ const emit = defineEmits<{
 
 // 对话框显示状态
 const dialogVisible = ref(false)
-// 前台选中权限列表
-const webPowersSelectedList = ref<object[]>([])
-// 后台选中权限列表
-const adminPowersSelectedList = ref<object[]>([])
-// 前台权限树ref对象
-const webTreeRef = ref<InstanceType<typeof ElTree>>()
-// 后台权限树ref对象
-const adminTreeRef = ref<InstanceType<typeof ElTree>>()
+// 选中权限列表
+const powersSelectedList = ref<object[]>([])
+// 权限树ref对象
+const treeRef = ref<InstanceType<typeof ElTree>>()
 
 // 定义方法
 
@@ -99,10 +77,10 @@ const closeBtnClick = () => {
 }
 // 确定按钮点击触发
 const confirmBtnClick = () => {
-  emit("dialogConfirmClick",[...webPowersSelectedList.value,...adminPowersSelectedList.value]);
+  emit("dialogConfirmClick",[...powersSelectedList.value]);
 }
-// 前台树节点选中处理函数
-const webCheckChangeHandle = (data1: any, data2: any) => {
+// 树节点选中处理函数
+const checkChangeHandle = (data1: any, data2: any) => {
   const result = [...data2.checkedNodes]
   let arr:object[] = []
   result.forEach(item => {
@@ -119,41 +97,15 @@ const webCheckChangeHandle = (data1: any, data2: any) => {
       ]))
     }
   })
-  webPowersSelectedList.value = arr
-}
-// 后台树节点选中处理函数
-const adminCheckChangeHandle = (data1: any, data2: any) => {
-  const result = [...data2.checkedNodes]
-  let arr:object[] = []
-  result.forEach(item => {
-    if(!item.children){
-      arr = Array.from(new Set([
-        ...arr,
-        {
-          id:item.id,
-          name:item.name,
-          type:item.type,
-          powerName:item.powerName,
-          moment:item.moment,
-        }
-      ]))
-    }
-  })
-  adminPowersSelectedList.value = arr
+  powersSelectedList.value = arr
 }
 const setCheckedKeys = (powerList:any[]) => { 
   nextTick(()=>{
-    const webPowerList:object[] = []
-    const adminPowerList:object[] = []
+    const PowerListData:object[] = []
     powerList.forEach(item => {
-      if(item.type === 0){
-        webPowerList.push(item.id)
-      }else if(item.type === 1){
-        adminPowerList.push(item.id)
-      }
+      PowerListData.push(item.id)
     })
-    webTreeRef.value?.setCheckedKeys(webPowerList, false)
-    adminTreeRef.value?.setCheckedKeys(adminPowerList, false) 
+    treeRef.value?.setCheckedKeys(PowerListData, false) 
   })
 }
 

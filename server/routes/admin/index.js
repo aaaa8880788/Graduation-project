@@ -46,6 +46,8 @@ const routes = function(app){
   app.post("/admin/api/updateRole",controller.updateRole)
   // 角色查询
   app.get("/admin/api/findRoles",controller.findRoles)
+  // 角色查询通过id
+  app.get("/admin/api/findRoleById",controller.findRoleById)
   // 角色删除
   app.delete("/admin/api/deleteRole",controller.deleteRole)
 
@@ -77,6 +79,8 @@ const routes = function(app){
   app.post("/admin/api/updateSchool",controller.updateSchool)
   // 学校查询
   app.get("/admin/api/findSchools",controller.findSchools)
+  // 学校查询通过id
+  app.get("/admin/api/findSchoolById",controller.findSchoolById)
   // 学校删除
   app.delete("/admin/api/deleteSchool",controller.deleteSchool)
 
@@ -87,6 +91,8 @@ const routes = function(app){
   app.post("/admin/api/updateClass",controller.updateClass)
   // 专业班级查询
   app.get("/admin/api/findClasses",controller.findClasses)
+  // 专业班级查询通过id
+  app.get("/admin/api/findClassById",controller.findClassById)
   // 专业班级删除
   app.delete("/admin/api/deleteClass",controller.deleteClass)
 
@@ -116,6 +122,8 @@ const routes = function(app){
   app.post("/admin/api/updateVedio",controller.updateVedio)
   // 视频查询
   app.get("/admin/api/findVedioes",controller.findVedioes)
+  // 文章查询通过id
+  app.get("/admin/api/findVedioById",controller.findVedioById)
   // 视频删除
   app.delete("/admin/api/deleteVedio",controller.deleteVedio)
 
@@ -172,6 +180,8 @@ const routes = function(app){
 
   // 图片上传接口部分
   app.post("/admin/api/upload/avatar",controller.uploadAvatarSingle("file"),controller.uploadAvatar);
+  // 视频上传接口部分
+  app.post("/admin/api/upload/vedio",controller.uploadVedioSingle("file"),controller.uploadVedio);
 }
 
 module.exports = routes

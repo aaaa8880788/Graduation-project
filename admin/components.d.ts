@@ -47,6 +47,7 @@ declare module '@vue/runtime-core' {
     QuillEditor: typeof import('./src/components/quill-editor/index.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
+    VedioPlay: typeof import('./src/components/vedio-play/index.vue')['default']
   }
   export interface ComponentCustomProperties {
     vLoading: typeof import('element-plus/es')['ElLoadingDirective']

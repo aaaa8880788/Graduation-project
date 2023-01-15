@@ -71,14 +71,13 @@
                 v-bind="item.otherOptions"
               />
             </template>
-            <template v-if="item.type === 'upload'">
+            <template v-if="item.type === 'imageUpload'">
               <el-upload
                 class="avatar-uploader"
                 :show-file-list="false"
                 v-bind="item.otherOptions"
                 :on-success="handleAvatarSuccess"
-                :before-upload="beforeAvatarUpload"
-              >
+                :before-upload="beforeAvatarUpload">
                 <img
                   v-if="modelValue[`${item.field}`]"
                   :src="modelValue[`${item.field}`]"
@@ -86,6 +85,36 @@
                 />
                 <el-icon v-else class="avatar-uploader-icon"><Plus /></el-icon>
               </el-upload>
+              <el-button 
+                v-if="modelValue[`${item.field}`]" 
+                type="danger"
+                style="marginLeft: 30px;"
+                @click="vedioUploadDeleteBtnClickHandle(item.field)"
+              >删除</el-button>
+            </template>
+            <template v-if="item.type === 'vedioUpload'">
+              <vue-vedio 
+                v-if="modelValue[`${item.field}`]" 
+                :src="modelValue[`${item.field}`]" >
+              </vue-vedio>
+              <el-upload
+                v-else
+                class="avatar-uploader"
+                :show-file-list="false"
+                v-bind="item.otherOptions"
+                :on-success="handleVedioSuccess"
+                :before-upload="beforeVedioUpload">
+                <el-icon 
+                  class="avatar-uploader-icon">
+                  <Plus />
+                </el-icon>  
+              </el-upload>
+              <el-button 
+                v-if="modelValue[`${item.field}`]" 
+                type="danger"
+                style="marginLeft: 30px;"
+                @click="vedioUploadDeleteBtnClickHandle(item.field)"
+              >删除</el-button>
             </template>
             <template v-if="item.type === 'quillEditor'">
               <quillEditor
@@ -108,9 +137,6 @@
                 <el-row
                   v-for="(item1,index) in modelValue[`${item.field}`]"
                   :key="index">
-                  <el-col :span="2">
-                    <el-tag>{{ transformNum(index) }}</el-tag>
-                  </el-col>
                   <el-col :span="20">
                     <el-input 
                       style="width: 95%;"
@@ -122,7 +148,7 @@
                     <el-button 
                       type="danger"
                       size="small"
-                      @click="deleteBtnClickHandle(item.field,index)">
+                      @click="customAddDeleteBtnClickHandle(item.field,index)">
                       删除
                     </el-button>
                   </el-col>
@@ -149,6 +175,7 @@ import type { UploadProps } from "element-plus";
 import { ElMessage } from "element-plus";
 import type { FormInstance } from "element-plus";
 import quillEditor from '@/components/quill-editor/index.vue'
+import vueVedio from '@/components/vedio-play/index.vue'
 
 // 定义类型
 interface Props {
@@ -176,7 +203,6 @@ const dialogVisible = ref(false);
 // 表单的ref对象
 const formRef = ref<FormInstance>();
 
-
 // 定义方法
 // 双向绑定值改变触发函数
 const valueChange = (value: any, field: any) => {
@@ -198,28 +224,59 @@ const handleAvatarSuccess: UploadProps["onSuccess"] = (
   uploadFile
 ) => {
   if(response.code === 200){
-    const uploadItem = props.formItems.find((item) => item.type === "upload");
-    const imageUrl = response.data.url;
+    const uploadItem = props.formItems.find((item) => item.type === "imageUpload");
+    const fileUrl = response.data.url;
     if (uploadItem) {
       emit("update:modelValue", {
         ...props.modelValue,
-        [uploadItem["field"]]: imageUrl,
+        [uploadItem["field"]]: fileUrl,
       });
     }
   }
 };
 
-// 图片点击之前的处理函数
+// 图片上传成功前的处理函数
 const beforeAvatarUpload: UploadProps["beforeUpload"] = (rawFile) => {
-  if (rawFile.type !== "image/jpeg") {
-    ElMessage.error("上传的图片格式只能是image/jpeg类型");
-    return false;
+  if (rawFile.type !== 'image/jpeg') {
+    ElMessage.error('图片只能是jpg格式')
+    return false
   } else if (rawFile.size / 1024 / 1024 > 2) {
-    ElMessage.error("图片上传大小不可超过2m");
-    return false;
+    ElMessage.error('图片大小不能超过2MB!')
+    return false
   }
   return true;
 };
+
+// 视频上传成功后处理函数
+const handleVedioSuccess: UploadProps["onSuccess"] = (
+  response,
+  uploadFile
+) => {
+  if(response.code === 200){
+    const uploadItem = props.formItems.find((item) => item.type === "vedioUpload");
+    const fileUrl = response.data.url;
+    if (uploadItem) {
+      emit("update:modelValue", {
+        ...props.modelValue,
+        [uploadItem["field"]]: fileUrl,
+      });
+    }
+  }
+};
+
+// 视频成功前的处理函数
+const beforeVedioUpload: UploadProps["beforeUpload"] = (rawFile) => {
+  if (rawFile.type !== 'video/mp4') {
+    ElMessage.error('视频只能是MP4格式')
+    return false
+  }
+  return true;
+};
+
+// 删除按钮触发
+const vedioUploadDeleteBtnClickHandle = (field:string) => {
+  emit("update:modelValue", { ...props.modelValue, [field]: '' });
+}
 
 // 表单验证方法
 const validateForm = async () => {
@@ -244,32 +301,15 @@ const selectValueChange = (val: any, field: string) => {
 // 添加按钮点击触发
 const addBtnClickHandle = (field:string) => {
   let formData = { ...props.modelValue }
-  if(formData[field].length === 4){
-    return ElMessage.warning("最多四个选项");
-  }
   formData[field].push('')
   emit("update:modelValue", formData);
 }
 
 // 删除按钮点击触发
-const deleteBtnClickHandle = (field:string,index:number) => {
+const customAddDeleteBtnClickHandle = (field:string,index:number) => {
   let formData = { ...props.modelValue,[field]:[...props.modelValue[field]] }
   formData[field].splice(index,1)
   emit("update:modelValue", formData);
-}
-
-// 数字字母转化方法
-const transformNum = (index:number) => {
-  switch (index) {
-    case 0:
-      return 'A'
-    case 1:
-      return 'B'
-    case 2:
-      return 'C'
-    case 3:
-      return 'D'
-  }
 }
 
 const customAddValueChangeHandle = (changeValue:string,field:string,index:number) => {

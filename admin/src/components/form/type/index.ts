@@ -1,4 +1,4 @@
-type IFormType = 'input' | 'password' | 'select' | 'datepicker' | 'upload' | 'quillEditor' | 'number' | 'customAdd'
+type IFormType = 'input' | 'password' | 'select' | 'datepicker' | 'vedioUpload' | 'imageUpload' | 'quillEditor' | 'number' | 'customAdd'
 
 interface IFormOption {
   label: string

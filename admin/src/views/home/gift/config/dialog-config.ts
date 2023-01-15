@@ -19,7 +19,7 @@ const addDialogConfig: IForm = {
     {
       label: "礼品图片",
       field: "image",
-      type: "upload",
+      type: "imageUpload",
       otherOptions: {
         action: import.meta.env.VITE_APP_IMAGE_URL,
         headers: {
@@ -82,7 +82,7 @@ const editDialogConfig: IForm = {
     {
       label: "礼品图片",
       field: "image",
-      type: "upload",
+      type: "imageUpload",
       otherOptions: {
         action: import.meta.env.VITE_APP_IMAGE_URL,
         headers: {

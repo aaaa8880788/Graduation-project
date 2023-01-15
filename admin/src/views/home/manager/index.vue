@@ -113,8 +113,8 @@
     <power-select
       ref="powerPageDialogRef"
       @dialogConfirmClick="powerDialogConfirmHandle"
-      :webTreeData="webPowerList"
-      :adminTreeData="adminPowerList"
+      title="后台权限"
+      :treeData="powerTreeList"
       :dialogTitle="powerDialogTitle"
     ></power-select>
     <!-- 权限分配对话框 -->
@@ -200,8 +200,7 @@ const powerDialogTitle = ref("分配管理员权限");
 // 权限对话框组件ref对象
 const powerPageDialogRef = ref<InstanceType<typeof powerSelect>>();
 // 权限数据
-const webPowerList = ref<[]>([])
-const adminPowerList = ref<[]>([])
+const powerTreeList = ref<[]>([])
 
 
 
@@ -284,37 +283,17 @@ const powerClickHandle = async(row:any) => {
   const result = await findPowers('/findpowers')
   if(result.code === 200){
     const powerList = [...result.data]
-    let arr0:any = []
-    let arr1:any = []
+    let arr:any = []
     powerList.forEach(power => {
-      if(power.type === 0){
-        const fatherNode = arr0.find((item2: { label: any; }) => item2.label === transFormPowerName(power.name))
+        if(power.type === 1){
+        const fatherNode = arr.find((item3: { label: any; }) => item3.label === transFormPowerName(power.name))
         if(fatherNode){
           fatherNode.children.push({
             ...power,
             label:transFormPowerName(power.powerName)
           })
         }else{
-          arr0.push({
-            id:Number(power.moment),
-            label:transFormPowerName(power.name),
-            children:[
-              {
-                ...power,
-                label:transFormPowerName(power.powerName)
-              }
-            ]
-          })
-        }
-      }else if(power.type === 1){
-        const fatherNode = arr1.find((item3: { label: any; }) => item3.label === transFormPowerName(power.name))
-        if(fatherNode){
-          fatherNode.children.push({
-            ...power,
-            label:transFormPowerName(power.powerName)
-          })
-        }else{
-          arr1.push({
+          arr.push({
             id:Number(power.moment),
             label:transFormPowerName(power.name),
             children:[
@@ -328,8 +307,7 @@ const powerClickHandle = async(row:any) => {
       }
     
     })
-    webPowerList.value = arr0
-    adminPowerList.value = arr1
+    powerTreeList.value = arr
     if(powerPageDialogRef.value){
       powerPageDialogRef.value.dialogVisible = true
       powerPageDialogRef.value.setCheckedKeys(currentPower)

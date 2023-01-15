@@ -38,7 +38,7 @@ const addDialogConfig: IForm = {
     {
       label: "头像",
       field: "avatar",
-      type: "upload",
+      type: "imageUpload",
       otherOptions: {
         action: import.meta.env.VITE_APP_IMAGE_URL,
         headers: {
@@ -106,7 +106,7 @@ const editDialogConfig: IForm = {
     {
       label: "头像",
       field: "avatar",
-      type: "upload",
+      type: "imageUpload",
       otherOptions: {
         action: import.meta.env.VITE_APP_IMAGE_URL,
         headers: {
