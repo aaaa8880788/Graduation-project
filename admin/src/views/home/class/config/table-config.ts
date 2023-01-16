@@ -5,7 +5,7 @@ const tableConfig: ITable = {
       prop: "name",
       label: "专业名称",
       align: "center",
-      minWidth: "60",
+      minWidth: "40",
     },
     {
       prop: "title",
@@ -25,13 +25,13 @@ const tableConfig: ITable = {
       label: "所属学院",
       slotName: "facultyId",
       align: "center",
-      minWidth: "70",
+      minWidth: "60",
     },
     {
       prop: 'moment',
       label: '创建时间',
       align: "center",
-      minWidth: '80',
+      minWidth: '60',
       slotName: 'moment'
     },
     {

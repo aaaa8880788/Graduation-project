@@ -5,14 +5,14 @@ const tableConfig: ITable = {
       prop: "name",
       label: "用户名",
       align: "center",
-      minWidth: "60",
+      minWidth: "40",
     },
     {
       prop: "avatar",
       label: "头像",
       align: "center",
       slotName: "avatar",
-      minWidth: "30",
+      minWidth: "20",
     },
     {
       prop: "password",
@@ -25,19 +25,19 @@ const tableConfig: ITable = {
       label: "用户类型",
       align: "center",
       slotName: "type",
-      minWidth: "60",
+      minWidth: "30",
     },
     {
       prop: "title",
       label: "别名",
       align: "center",
-      minWidth: "50",
+      minWidth: "40",
     },
     {
       prop: 'moment',
       label: '创建时间',
       align: "center",
-      minWidth: '80',
+      minWidth: '50',
       slotName: 'createAt'
     },
     {

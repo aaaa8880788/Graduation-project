@@ -5,13 +5,13 @@ const tableConfig: ITable = {
       prop: "name",
       label: "角色名称",
       align: "center",
-      minWidth: "60",
+      minWidth: "40",
     },
     {
       prop: "introduce",
       label: "角色介绍",
       align: "center",
-      minWidth: "120",
+      minWidth: "80",
     },
     {
       prop: "request",

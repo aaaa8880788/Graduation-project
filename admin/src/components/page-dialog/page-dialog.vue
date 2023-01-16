@@ -85,12 +85,15 @@
                 />
                 <el-icon v-else class="avatar-uploader-icon"><Plus /></el-icon>
               </el-upload>
-              <el-button 
-                v-if="modelValue[`${item.field}`]" 
-                type="danger"
-                style="marginLeft: 30px;"
-                @click="vedioUploadDeleteBtnClickHandle(item.field)"
-              >删除</el-button>
+              <template v-if="!item.otherOptions.disabled">
+                <el-button 
+                  v-if="modelValue[`${item.field}`]" 
+                  type="danger"
+                  style="marginLeft: 30px;"
+                  @click="vedioUploadDeleteBtnClickHandle(item.field)">
+                    删除
+                </el-button>
+              </template>
             </template>
             <template v-if="item.type === 'vedioUpload'">
               <vue-vedio 
@@ -129,6 +132,7 @@
               <div style="width: 100%;">
                 <el-row>
                   <el-button 
+                  v-if="!item.otherOptions?.disabled"
                   type="primary"
                   style="margin-bottom: 10px;"
                   round
@@ -141,6 +145,7 @@
                   :key="index">
                   <el-col :span="20">
                     <el-input 
+                      v-bind="item.otherOptions"
                       style="width: 95%;"
                       :modelValue="item1"
                       @update:modelValue="customAddValueChangeHandle($event,item.field,index)"
@@ -148,6 +153,7 @@
                   </el-col>
                   <el-col :span="2">
                     <el-button 
+                      v-if="!item.otherOptions?.disabled"
                       type="danger"
                       size="small"
                       @click="customAddDeleteBtnClickHandle(item.field,index)">

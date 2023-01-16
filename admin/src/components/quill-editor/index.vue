@@ -15,13 +15,14 @@
       id="editorId"
       :content="content"
       :contentType="contentType"
-      :placeholder="placeholder"
+      :placeholder="readOnly ? '' : placeholder"
+      :readOnly="readOnly"
       :options="options"
       @update:content="contentChangeHandle" />
 </template>
 
 <script setup lang="ts">
-import { reactive,ref,toRaw } from 'vue'
+import { reactive,ref,toRaw,watch } from 'vue'
 import type { UploadProps } from "element-plus";
 import { ElMessage } from "element-plus";
 // 导入富文本
@@ -36,13 +37,15 @@ interface Props {
   contentType?: "html" | "delta" | "text" | undefined
   action:any
   headers:any
+  readOnly?:boolean
 }
 
 // 定义属性
 const props = withDefaults(defineProps<Props>(), {
   content:"",
   placeholder: "请输入内容",
-  contentType: "html"
+  contentType: "html",
+  readOnly:false
 });
 
 const emit = defineEmits<{
@@ -83,7 +86,19 @@ const options = reactive({
           userOnly: false
         },
       },
-    });
+});
+
+let readOnlyStyle = {
+  backgroundColor: '#f5f7fa',
+  cursor:'no-drop'
+}
+if(!props.readOnly){
+  readOnlyStyle = {
+    backgroundColor: '',
+    cursor: ''
+  }
+}
+
 
 // 定义方法
 const contentChangeHandle = (content:Delta) => {
@@ -139,5 +154,9 @@ const beforeAvatarUpload: UploadProps["beforeUpload"] = (rawFile) => {
 <style>
 .ql-toolbar.ql-snow,.ql-toolbar.ql-snow + .ql-container.ql-snow {
   width: 100%;
+}
+#editorId {
+  background-color: v-bind('readOnlyStyle.backgroundColor');
+  cursor:v-bind('readOnlyStyle.cursor');
 }
 </style>

@@ -62,6 +62,14 @@
             不允许编辑
           </el-tag>
           <el-button 
+            v-else
+            type="primary" 
+            size="small"
+            :icon="View"
+            @click="detailClickHandle(scope.row)">
+            详情
+          </el-button>
+          <el-button 
             v-if="permission.power"
             type="primary" 
             size="small"
@@ -118,13 +126,22 @@
       :dialogTitle="powerDialogTitle"
     ></power-select>
     <!-- 权限分配对话框 -->
+    <!-- 详情对话框 -->
+    <page-dialog
+      ref="detailPageDialogRef"
+      @dialogConfirmClick="detailDialogConfirmHandle"
+      v-bind="detailDialogConfig"
+      v-model="detailDialogFormData"
+      :dialogTitle="detailDialogTitle"
+    ></page-dialog>
+    <!-- 详情对话框 -->
     <!-- 对话框部分 -->
     </el-scrollbar>
   </div>
 </template>
 
 <script setup lang="ts">
-import { Delete, Edit ,Setting} from "@element-plus/icons-vue";
+import { Delete, Edit , Setting, View} from "@element-plus/icons-vue";
 import { ref } from "vue";
 import pageSearch from "@/components/page-search/page-search.vue";
 import pageTable from "@/components/page-table/page-table.vue";
@@ -138,7 +155,7 @@ import { searchFormConfig } from './config/search-config'
 // 表格配置项
 import { tableConfig } from "./config/table-config";
 // 对话框配置项
-import { addDialogConfig,editDialogConfig } from "./config/dialog-config";
+import { addDialogConfig,editDialogConfig,detailDialogConfig } from "./config/dialog-config";
 // 导入工具方法
 import { gernarateFormData } from "@/utils/formData-gernarate";
 import { formateString } from "@/utils/date-formate";
@@ -196,6 +213,15 @@ const editPageDialogRef = ref<InstanceType<typeof pageDialog>>();
 // 编辑用户id
 let editUserId = ref<number | string>('')
 
+// 详情按钮对话框formData数据
+const detailDialogFormData = ref(gernarateFormData(detailDialogConfig));
+// 对话框标题
+const detailDialogTitle = ref("详情");
+// 详情对话框组件ref对象
+const detailPageDialogRef = ref<InstanceType<typeof pageDialog>>();
+// 详情用户id
+let detailUserId = ref<number | string>('')
+
 // 对话框标题
 const powerDialogTitle = ref("分配管理员权限");
 // 权限对话框组件ref对象
@@ -235,6 +261,27 @@ const editClickHandle = async(row:any) => {
     }
     if(editPageDialogRef.value){
       editPageDialogRef.value.dialogVisible = true
+    }
+  }else{
+    ElMessage({
+      message: result.message,
+      type: "error",
+    });
+  }
+}
+// 详情按钮点击触发
+const detailClickHandle = async(row:any) => {
+  detailUserId.value = row.id
+  detailDialogFormData.value = gernarateFormData(detailDialogConfig)
+  const result = await findManagerById('/findManagerbyId',detailUserId.value)
+  if(result.code === 200){
+    for(const key in detailDialogFormData.value){
+      if(result.data[key]){
+        detailDialogFormData.value[key] = result.data[key]
+      }
+    }
+    if(detailPageDialogRef.value){
+      detailPageDialogRef.value.dialogVisible = true
     }
   }else{
     ElMessage({
@@ -358,6 +405,11 @@ const editDialogConfirmHandle = async() => {
       type: "error",
     });
   }
+}
+// 详情对话框确定按钮点击触发
+const detailDialogConfirmHandle = async() =>{
+  if (!detailPageDialogRef.value) return;
+  detailPageDialogRef.value.dialogVisible = false;
 }
 // 权限对话框确定按钮点击触发
 const powerDialogConfirmHandle = async(powerList:object[]) => {
