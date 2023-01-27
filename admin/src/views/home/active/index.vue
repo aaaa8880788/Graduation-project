@@ -22,18 +22,26 @@
       @pageSizeChange="paginationHandle"
       @currentSizeChange="paginationHandle">
       <!-- 插槽部分处理 -->
-      <!-- 使用状态列 -->
-      <template #status="scope">
-        <el-tag 
-          v-if="scope.row.status === 0"
-          type="danger">
-          不可使用
+      <!-- 参与人数列 -->
+      <template #joinUser="scope">
+        <el-tag v-if="scope.row.joinUser">
+          {{ scope.row.joinUser.length }}
         </el-tag>
         <el-tag v-else>
-          可使用
+          0
         </el-tag>
       </template>
-      <!-- 使用状态列 -->
+      <!-- 参与人数列 -->
+      <!-- 审核状态列 -->
+      <template #isPass="scope">
+        <el-tag v-if="scope.row.isPass === 0">
+          未审核
+        </el-tag>
+        <el-tag v-else>
+          审核通过
+        </el-tag>
+      </template>
+      <!-- 审核状态列 -->
       <!-- 时间列 -->
       <template #moment="scope">
         {{ formateString(String(scope.row.moment)) }}
@@ -46,6 +54,14 @@
             type="danger">
             不允许编辑
           </el-tag>
+          <el-button 
+            v-else
+            type="primary" 
+            size="small"
+            :icon="View"
+            @click="detailClickHandle(scope.row)">
+            详情
+          </el-button>
           <el-button
             v-if="permission.modify"
             type="primary" 
@@ -54,7 +70,7 @@
             @click="editClickHandle(scope.row)">
               编辑
           </el-button>
-          <el-button 
+          <el-button
             v-if="permission.delete"
             type="danger" 
             :icon="Delete" 
@@ -71,7 +87,7 @@
     <page-dialog
       ref="addPageDialogRef"
       @dialogConfirmClick="addDialogConfirmHandle"
-      v-bind="addDialogConfig"
+      v-bind="newAddDialogConfig"
       v-model="addDialogFormData"
       :dialogTitle="addDialogTitle"
     ></page-dialog>
@@ -80,36 +96,53 @@
     <page-dialog
       ref="editPageDialogRef"
       @dialogConfirmClick="editDialogConfirmHandle"
-      v-bind="editDialogConfig"
+      v-bind="newEditDialogConfig"
       v-model="editDialogFormData"
       :dialogTitle="editDialogTitle"
     ></page-dialog>
     <!-- 编辑对话框 -->
+    <!-- 详情对话框 -->
+    <page-dialog
+      ref="detailPageDialogRef"
+      @dialogConfirmClick="detailDialogConfirmHandle"
+      v-bind="newDetailDialogConfig"
+      v-model="detailDialogFormData"
+      :dialogTitle="detailDialogTitle"
+    ></page-dialog>
+    <!-- 详情对话框 -->
     <!-- 对话框部分 -->
     </el-scrollbar>
   </div>
 </template>
 
 <script setup lang="ts">
-import { Delete, Edit } from "@element-plus/icons-vue";
-import { ref } from "vue";
+import { Delete, Edit, View,Setting } from "@element-plus/icons-vue";
+import { ref,computed } from "vue";
 import pageSearch from "@/components/page-search/page-search.vue";
 import pageTable from "@/components/page-table/page-table.vue";
 import pageDialog from "@/components/page-dialog/page-dialog.vue";
 // 导入Element Plus方法
-import { ElMessage, ElMessageBox } from "element-plus";
+import { ElButton, ElMessage, ElMessageBox, ElScrollbar, ElTag } from "element-plus";
 // 导入搜索表单配置项
 import { searchFormConfig } from './config/search-config'
 // 表格配置项
 import { tableConfig } from "./config/table-config";
 // 对话框配置项
-import { addDialogConfig,editDialogConfig } from "./config/dialog-config";
+import { addDialogConfig,editDialogConfig,detailDialogConfig } from "./config/dialog-config";
 // 导入工具方法
 import { gernarateFormData } from "@/utils/formData-gernarate";
 import { formateString } from "@/utils/date-formate";
 import { objRemoveNullHandle } from "@/hook/useObjHandle"
 // 导入网络方法
-import { getActivesRequest,deleteActive,addActive,updateActive,findActiveById } from "@/network/home";
+import { 
+  getActivesRequest,
+  deleteActive,
+  addActive,
+  updateActive,
+  findActiveById,
+  getPlacesRequest,
+  getUsersRequest,
+} from "@/network/home";
 // 导入pinia
 import { useLoginStore } from "@/store/login";
 
@@ -119,6 +152,18 @@ interface Permission{
   delete?:boolean
   modify?:boolean
   find?:boolean
+  power?:boolean
+}
+
+interface PlaceOptions{
+  label:string,
+  value:string,
+  key:string
+}
+interface UserOptions{
+  label:string,
+  value:string,
+  key:string
 }
 
 // 定义属性
@@ -136,6 +181,11 @@ const tableDataTotal = ref(0)
 // 表格组件ref对象
 const pageTableRef = ref<InstanceType<typeof pageTable>>();
 
+// 活动地点列表数据
+const placesListData = ref([])
+// 用户列表数据
+const usersListData = ref([])
+
 
 // 搜索参数数据queryInfo，从接收到的搜索配置中取出各个field组成
 const queryInfo = ref(gernarateFormData(searchFormConfig))
@@ -146,18 +196,168 @@ const pageSearchRef = ref<InstanceType<typeof pageSearch>>();
 // 添加按钮对话框formData数据
 const addDialogFormData = ref(gernarateFormData(addDialogConfig));
 // 对话框标题
-const addDialogTitle = ref("添加活动");
+const addDialogTitle = ref("添加用户");
 // 添加对话框组件ref对象
 const addPageDialogRef = ref<InstanceType<typeof pageDialog>>();
+// 添加对话框配置项处理
+const newAddDialogConfig = computed(() => {
+  let placeOptions:PlaceOptions[] = []
+  let userOptions:UserOptions[] = []
+  let config = addDialogConfig
+  if(
+      !placesListData.value.length || 
+      !usersListData.value.length)
+  {
+    return config
+  }
+  // 活动地点处理
+  placesListData.value.forEach((item:Record<string,any>) => {
+    placeOptions.push({
+      label:item.name,
+      value:item.id,
+      key:item.id
+    })
+  })
+  const placeFormItem = config.formItems.find(item => item.field === 'placeId')
+  if(placeFormItem){
+    placeFormItem.options = placeOptions
+  }
+  // 用户处理
+  usersListData.value.forEach((item:Record<string,any>) => {
+    userOptions.push({
+      label:item.name,
+      value:item.id,
+      key:item.id
+    })
+  })
+  const userFormItem = config.formItems.find(item => item.field === 'userId')
+  if(userFormItem){
+    userFormItem.options = userOptions
+  }
+  // 活动参与人数处理
+  if(addDialogFormData.value.placeId){
+    console.log('aaaa');
+    
+    const placeData:any = placesListData.value.find((item:Record<string,any>) => item.id === addDialogFormData.value.placeId)
+    if(placeData){
+      addDialogFormData.value.placeVolume = placeData.volume
+    }
+  }else{
+    addDialogFormData.value.placeVolumn = 0
+  }
+  return config
+})
 
 // 编辑按钮对话框formData数据
 const editDialogFormData = ref(gernarateFormData(editDialogConfig));
 // 对话框标题
-const editDialogTitle = ref("编辑活动");
+const editDialogTitle = ref("编辑用户");
 // 编辑对话框组件ref对象
 const editPageDialogRef = ref<InstanceType<typeof pageDialog>>();
 // 编辑用户id
 let editUserId = ref<number | string>('')
+// 编辑对话框配置项处理
+const newEditDialogConfig = computed(() => {
+  let placeOptions:PlaceOptions[] = []
+  let userOptions:UserOptions[] = []
+  let config = editDialogConfig
+  if(
+      !placesListData.value.length || 
+      !usersListData.value.length)
+  {
+    return config
+  }
+  // 活动地点处理
+  placesListData.value.forEach((item:Record<string,any>) => {
+    placeOptions.push({
+      label:item.name,
+      value:item.id,
+      key:item.id
+    })
+  })
+  const placeFormItem = config.formItems.find(item => item.field === 'placeId')
+  if(placeFormItem){
+    placeFormItem.options = placeOptions
+  }
+  // 用户处理
+  usersListData.value.forEach((item:Record<string,any>) => {
+    userOptions.push({
+      label:item.name,
+      value:item.id,
+      key:item.id
+    })
+  })
+  const userFormItem = config.formItems.find(item => item.field === 'userId')
+  if(userFormItem){
+    userFormItem.options = userOptions
+  }
+  // 活动参与人数处理
+  if(editDialogFormData.value.placeId){
+    const placeData:any = placesListData.value.find((item:Record<string,any>) => item.id === editDialogFormData.value.placeId)
+    if(placeData){
+      editDialogFormData.value.placeVolume = placeData.volume
+    }
+  }else{
+    editDialogFormData.value.placeVolumn = 0
+  }
+  return config
+})
+
+// 详情按钮对话框formData数据
+const detailDialogFormData = ref(gernarateFormData(detailDialogConfig));
+// 对话框标题
+const detailDialogTitle = ref("详情");
+// 详情对话框组件ref对象
+const detailPageDialogRef = ref<InstanceType<typeof pageDialog>>();
+// 详情用户id
+let detailUserId = ref<number | string>('')
+// 详情对话框配置项处理
+const newDetailDialogConfig = computed(() => {
+  let placeOptions:PlaceOptions[] = []
+  let userOptions:UserOptions[] = []
+  let config = detailDialogConfig
+  if(
+      !placesListData.value.length || 
+      !usersListData.value.length)
+  {
+    return config
+  }
+  // 活动地点处理
+  placesListData.value.forEach((item:Record<string,any>) => {
+    placeOptions.push({
+      label:item.name,
+      value:item.id,
+      key:item.id
+    })
+  })
+  const placeFormItem = config.formItems.find(item => item.field === 'placeId')
+  if(placeFormItem){
+    placeFormItem.options = placeOptions
+  }
+  // 用户处理
+  usersListData.value.forEach((item:Record<string,any>) => {
+    userOptions.push({
+      label:item.name,
+      value:item.id,
+      key:item.id
+    })
+  })
+  const userFormItem = config.formItems.find(item => item.field === 'userId')
+  if(userFormItem){
+    userFormItem.options = userOptions
+  }
+  // 活动参与人数处理
+  if(detailDialogFormData.value.placeId){
+    const placeData:any = placesListData.value.find((item:Record<string,any>) => item.id === detailDialogFormData.value.placeId)
+    if(placeData){
+      detailDialogFormData.value.placeVolume = placeData.volume
+    }
+  }else{
+    detailDialogFormData.value.placeVolumn = 0
+  }
+  return config
+})
+
 
 // 定义方法
 // 重置按钮点击触发
@@ -187,6 +387,25 @@ const editClickHandle = async(row:any) => {
     }
     if(editPageDialogRef.value){
       editPageDialogRef.value.dialogVisible = true
+    }
+  }else{
+    ElMessage({
+      message: result.message,
+      type: "error",
+    });
+  }
+}
+// 详情按钮点击触发
+const detailClickHandle = async(row:any) => {
+  detailUserId.value = row.id
+  detailDialogFormData.value = gernarateFormData(detailDialogConfig)
+  const result = await findActiveById('/findActiveById',detailUserId.value)
+  if(result.code === 200){
+    for(const key in detailDialogFormData.value){
+      detailDialogFormData.value[key] = result.data[key]
+    }
+    if(detailPageDialogRef.value){
+      detailPageDialogRef.value.dialogVisible = true
     }
   }else{
     ElMessage({
@@ -274,6 +493,11 @@ const editDialogConfirmHandle = async() => {
     });
   }
 }
+// 详情对话框确定按钮点击触发
+const detailDialogConfirmHandle = async() =>{
+  if (!detailPageDialogRef.value) return;
+  detailPageDialogRef.value.dialogVisible = false;
+}
 
 // 分页器触发函数
 const paginationHandle = () => {
@@ -298,13 +522,45 @@ const getPageData = async (queryInfo?: object) => {
   }
 }
 
+// 发送网络请求获取地点列表数据
+const getPlacesListData = async() =>{
+  const result = await getPlacesRequest("/findPlaces", {
+    page: 1,
+    pageSize: 999,
+  })
+  if (result.code === 200) {
+    placesListData.value = result.data
+  }else{
+    ElMessage({
+      message: result.message,
+      type: "error",
+    });
+  }
+}
+
+// 发送网络请求获取学院列表数据
+const getUsersListData = async() =>{
+  const result = await getUsersRequest("/findUsers", {
+    page: 1,
+    pageSize: 999,
+  })
+  if (result.code === 200) {
+    usersListData.value = result.data
+  }else{
+    ElMessage({
+      message: result.message,
+      type: "error",
+    });
+  }
+}
+
 // 获取权限数据
 const getPermission = () => {
   const menuList = useLogin.menuList
-  const activeData = menuList.find(item => item.name === 'active')
-  if(activeData){
+  const articleData = menuList.find(item => item.name === 'active')
+  if(articleData){
     const obj:Record<string,boolean> = {}
-    const permission:string[] = activeData.permission
+    const permission:string[] = articleData.permission
     permission.forEach(item => {
       obj[item] = true
     })
@@ -318,6 +574,11 @@ permission.value = getPermission()
 
 // 获取列表数据
 await getPageData(queryInfo.value);
+// 获取活动列表数据
+await getPlacesListData()
+// 获取用户列表数据
+await getUsersListData()
+
 
 </script>
 

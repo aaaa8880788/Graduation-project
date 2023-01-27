@@ -3,33 +3,45 @@ const tableConfig: ITable = {
   propList: [
     {
       prop: "name",
-      label: "活动",
+      label: "活动名称",
       align: "center",
-      minWidth: "60",
+      minWidth: "30",
     },
     {
-      prop: "placeId",
+      prop: "placeData.name",
       label: "活动地点",
       align: "center",
-      minWidth: "60",
-      slotName: 'placeId'
+      minWidth: "30",
     },
     {
-      prop: "body",
-      label: "活动内容",
+      prop: "userData.name",
+      label: "活动举办人",
       align: "center",
-      minWidth: "60",
+      minWidth: "30",
     },
     {
-      prop: "userId",
-      label: "发布者",
+      prop: "placeData.volume",
+      label: "人数限制",
       align: "center",
-      minWidth: "60",
-      slotName: 'userId'
+      minWidth: "30",
+    },
+    {
+      prop: "joinUser",
+      label: "参与人数",
+      slotName: "joinUser",
+      align: "center",
+      minWidth: "30",
+    },
+    {
+      prop: "isPass",
+      label: "审核状态",
+      slotName: "isPass",
+      align: "center",
+      minWidth: "30",
     },
     {
       prop: 'moment',
-      label: '发布时间',
+      label: '创建时间',
       align: "center",
       minWidth: '80',
       slotName: 'moment'

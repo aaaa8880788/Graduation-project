@@ -55,6 +55,17 @@ const addDialogConfig: IForm = {
       ],
     },
     {
+      label: "预览图片",
+      field: "image",
+      type: "imageUpload",
+      otherOptions: {
+        action: import.meta.env.VITE_APP_IMAGE_URL,
+        headers: {
+          Authorization: localCache.getCache("token") || "",
+        },
+      }
+    },
+    {
       label: "视频文件",
       field: "vedio",
       type: "vedioUpload",
@@ -127,6 +138,17 @@ const editDialogConfig: IForm = {
           trigger: "blur",
         },
       ],
+    },
+    {
+      label: "预览图片",
+      field: "image",
+      type: "imageUpload",
+      otherOptions: {
+        action: import.meta.env.VITE_APP_IMAGE_URL,
+        headers: {
+          Authorization: localCache.getCache("token") || "",
+        },
+      }
     },
     {
       label: "视频文件",
@@ -208,6 +230,18 @@ const detailDialogConfig: IForm = {
           trigger: "blur",
         },
       ],
+    },
+    {
+      label: "预览图片",
+      field: "image",
+      type: "imageUpload",
+      otherOptions: {
+        action: import.meta.env.VITE_APP_IMAGE_URL,
+        headers: {
+          Authorization: localCache.getCache("token") || "",
+        },
+        disabled:true
+      }
     },
     {
       label: "视频文件",

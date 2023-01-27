@@ -554,6 +554,7 @@ let users = `create table if not exists users(
   id INT NOT NULL AUTO_INCREMENT,
   type INT NOT NULL COMMENT '0学生1教师',
   name VARCHAR(1000) NOT NULL COMMENT '姓名',
+  password VARCHAR(1000) NOT NULL COMMENT '密码',
   avatar VARCHAR(1000) COMMENT '头像',
   powerId VARCHAR(1000) COMMENT '权限id数组',
   organizationId INT COMMENT '组织id',
@@ -566,6 +567,9 @@ let users = `create table if not exists users(
   score INT COMMENT '积分值',
   address VARCHAR(1000) COMMENT '收货地址',
   moment varchar(1000) NOT NULL COMMENT '创建时间',
+  signMoment varchar(1000) COMMENT '签到时间',
+  sex varchar(1000) COMMENT '性别',
+  birthday varchar(1000) COMMENT '生日',
   PRIMARY KEY (id) 
 )`
 
@@ -586,6 +590,7 @@ let vedioes = `create table if not exists vedioes(
   title VARCHAR(100) NOT NULL COMMENT '视频标题',
   type INT NOT NULL COMMENT '视频类型0时事要闻1新思想2党史3党建',
   body VARCHAR(1000) NOT NULL COMMENT '视频内容',
+  image VARCHAR(1000) COMMENT '视频预览图片',
   vedio VARCHAR(1000) NOT NULL COMMENT '视频文件',
   supportUser VARCHAR(1000) COMMENT '收藏用户id数组',
   moment varchar(100) NOT NULL COMMENT '创建时间',
@@ -647,6 +652,7 @@ let comments = `create table if not exists comments(
   userId INT NOT NULL COMMENT '评论者id',
   fatherId INT NOT NULL COMMENT '文章||视频||活动id',
   status INT NOT NULL COMMENT '0审核不通过1审核通过',
+  supportUser VARCHAR(1000) COMMENT '点赞用户数组',
   moment varchar(100) NOT NULL COMMENT '评论时间',
   PRIMARY KEY (id) 
 )`
@@ -1225,7 +1231,7 @@ exports.deleteClass = (type,id) => {
 // 用户添加
 exports.addUser = (type,value) => {
   if(type === 1){
-    const _sql = "insert into users set type=?,name=?,avatar=?,powerId=?,organizationId=?,facultyId=?,schoolId=?,classId=?,className=?,cardId=?,phone=?,score=?,address=?,moment=?"
+    const _sql = "insert into users set type=?,name=?,password=?,avatar=?,powerId=?,organizationId=?,facultyId=?,schoolId=?,classId=?,className=?,cardId=?,phone=?,score=?,address=?,moment=?"
     return query(_sql,value)
   }else if (type === 2){
     const _sql = "select count(*) as count from users where cardId=?"
@@ -1236,7 +1242,7 @@ exports.addUser = (type,value) => {
 // 用户修改
 exports.updateUser= (type,value) => {
   if(type === 1){
-    const _sql = "UPDATE users set type=?,name=?,avatar=?,powerId=?,organizationId=?,facultyId=?,schoolId=?,classId=?,className=?,cardId=?,phone=?,score=?,address=? where id=?"
+    const _sql = "UPDATE users set type=?,name=?,password=?,avatar=?,powerId=?,organizationId=?,facultyId=?,schoolId=?,classId=?,className=?,cardId=?,phone=?,score=?,address=? where id=?"
     return query(_sql,value)
   }else if (type === 2){
     const _sql = "select count(*) as count from users where id=?"
@@ -1373,7 +1379,7 @@ exports.deleteArticle = (type,id) => {
 // 视频添加
 exports.addVedio = (type,value) => {
   if(type === 1){
-    const _sql = "insert into vedioes set title=?,type=?,body=?,vedio=?,supportUser=?,moment=?"
+    const _sql = "insert into vedioes set title=?,type=?,image=?,body=?,vedio=?,supportUser=?,moment=?"
     return query(_sql,value)
   }else if (type === 2){
     const _sql = "select count(*) as count from vedioes where title=? and type=?"
@@ -1384,7 +1390,7 @@ exports.addVedio = (type,value) => {
 // 视频修改
 exports.updateVedio= (type,value) => {
   if(type === 1){
-    const _sql = "UPDATE vedioes set title=?,type=?,body=?,vedio=?,supportUser=? where id=?"
+    const _sql = "UPDATE vedioes set title=?,type=?,image=?,body=?,vedio=?,supportUser=? where id=?"
     return query(_sql,value)
   }else if (type === 2){
     const _sql = "select count(*) as count from vedioes where id=?"
@@ -1445,7 +1451,7 @@ exports.deleteVedio = (type,id) => {
 // 活动添加
 exports.addActive = (type,value) => {
   if(type === 1){
-    const _sql = "insert into actives set name=?,placeId=?,body=?,userId=?,supportUser=?,joinUser=?,score=?,isPass=?"
+    const _sql = "insert into actives set name=?,placeId=?,body=?,userId=?,supportUser=?,joinUser=?,score=?,isPass=?,moment=?"
     return query(_sql,value)
   }else if (type === 2){
     const _sql = "select count(*) as count from actives where name=?"
@@ -1468,9 +1474,47 @@ exports.updateActive= (type,value) => {
 }
 
 // 活动查询
-exports.findActives = (page,pageSize) => {
-  const _sql = `select * from actives order by id desc limit ${(page-1)*pageSize},${page*pageSize}`
-  return query(_sql)
+exports.findActives = (type,value) => {
+  if(type === 1){
+    const [page,pageSize,name,isPass,moment] = value
+    const newArr = [{name},{moment},{isPass}].filter(item=>{
+      for(const key in item){
+        return item[key] !== null
+      }
+    })
+    const whereStr = utils.generateWhere(newArr)
+    const _sql = `select * from actives ${whereStr} order by id desc limit ${(page-1)*pageSize},${page*pageSize}`
+    return query(_sql)
+  }else if (type === 2){
+    const [name,isPass,moment] = value
+    const newArr = [{name},{moment},{isPass}].filter(item=>{
+      for(const key in item){
+        return item[key] !== null
+      }
+    })
+    const whereStr = utils.generateWhere(newArr)
+    const _sql = `select * from actives ${whereStr}`
+    return query(_sql)
+  }else if (type ===3){
+    const [placeId] = value
+    const _sql = `select * from Places where id=${placeId}`
+    return query(_sql)
+  }else if (type ===4){
+    const [userId] = value
+    const _sql = `select * from Users where id=${userId}`
+    return query(_sql)
+  }
+}
+
+// 活动查询通过id
+exports.findActiveById = (type,id) => {
+  if(type === 1){
+    const _sql = `select * from actives where id="${id}"`
+    return query(_sql)
+  }else if(type ===2){
+    const _sql = `select count(*) as count from actives where id="${id}"`
+    return query(_sql)
+  }
 }
 
 // 活动删除
@@ -1740,4 +1784,90 @@ exports.deleteComment = (type,id) => {
     const _sql = `select count(*) as count from comments where id="${id}"`
     return query(_sql)
   }
+}
+
+
+// 前台接口部分
+
+// 前台获取组织列表
+exports.getOrganizationsList = () => {
+  const _sql = `select * from organizations`
+  return query(_sql)
+}
+
+// 前台获取学院列表
+exports.getFacultiesList = () => {
+  const _sql = `select * from faculties`
+  return query(_sql)
+}
+
+// 前台获取学校列表
+exports.getSchoolsList = () => {
+  const _sql = `select * from schools`
+  return query(_sql)
+}
+
+// 前台获取专业班级列表
+exports.getClassesList = () => {
+  const _sql = `select * from classes`
+  return query(_sql)
+}
+
+// 前台注册接口
+exports.userRegister = (type,value) => {
+  if(type === 1){
+    const _sql = "insert into users set type=?,name=?,password=?,avatar=?,powerId=?,organizationId=?,facultyId=?,schoolId=?,classId=?,className=?,cardId=?,phone=?,score=?,address=?,moment=?"
+    return query(_sql,value)
+  }else if (type === 2){
+    const _sql = "select count(*) as count from users where cardId=?"
+    return query(_sql,value)
+  }else if (type === 3){
+    const _sql = "select count(*) as count from users where phone=?"
+    return query(_sql,value)
+  }
+}
+
+// 前台登录接口
+exports.userLogin = (type,value) => {
+  if(type === 1){
+    const _sql = `select count(*) as count from users where phone=?`
+    return query(_sql,value)
+  }else if (type === 2){
+    const _sql = `select count(*) as count from users where cardId=?`
+    return query(_sql,value)
+  }else if (type === 3){
+    const _sql = `select * from users where phone=?`
+    return query(_sql,value)
+  }
+}
+
+// 前台获取文章列表
+exports.getArticlesList = async () => {
+  const _sql = `select * from articles`
+  return query(_sql)
+}
+
+// 前台获取文章详情
+exports.getArticleDetail = (type,id) => {
+  if(type === 1){
+    const _sql = `select * from articles where id="${id}"`
+    return query(_sql)
+  }else if(type ===2){
+    const _sql = `select count(*) as count from articles where id="${id}"`
+    return query(_sql)
+  }
+}
+
+// 前台获取个人信息
+exports.getUserInfo = async (type,value) => {
+  if(type === 1){
+    const _sql = `select * from users where id=?`
+    return query(_sql,value)
+  }
+}
+
+// 前台获取视频列表
+exports.getVedioesList = async () => {
+  const _sql = `select * from vedioes`
+  return query(_sql)
 }

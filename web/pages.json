@@ -1,0 +1,118 @@
+{
+	"pages": [
+		{
+		"path": "pages/index/index",
+		"style": {}
+		},
+		{
+		"path": "pages/login/login",
+		"style": {
+			"navigationBarTitleText": "",
+			"enablePullDownRefresh": false
+			}
+		},
+		{
+		"path": "pages/home/home",
+		"style": {
+			"navigationBarTitleText": "",
+			"enablePullDownRefresh": false
+			}
+		},
+		{
+		"path": "pages/register/register",
+		"style": {
+			"navigationBarTitleText": "",
+			"enablePullDownRefresh": false
+			}
+		},
+	  {
+	    "path" : "pages/mine/mine",
+	    "style" : {
+	      "navigationBarTitleText": "",
+	      "enablePullDownRefresh": false
+	    }
+	  }
+        ,{
+            "path" : "pages/video/video",
+            "style" :                                                                                    
+            {
+                "navigationBarTitleText": "",
+                "enablePullDownRefresh": false
+            }
+            
+        }
+        ,{
+            "path" : "pages/chat/chat",
+            "style" :                                                                                    
+            {
+                "navigationBarTitleText": "",
+                "enablePullDownRefresh": false
+            }
+            
+        }
+        ,{
+            "path" : "pages/people/people",
+            "style" :                                                                                    
+            {
+                "navigationBarTitleText": "",
+                "enablePullDownRefresh": false
+            }
+            
+        }
+        ,{
+            "path" : "pages/articleDetail/articleDetail",
+            "style" :                                                                                    
+            {
+                "navigationBarTitleText": "",
+                "enablePullDownRefresh": false
+            }
+            
+        }
+    ],
+	"globalStyle": {
+		"navigationStyle":"custom",
+		"navigationBarTitleText": "学习党建",
+		"app-plus": {
+			"background": "#efeff4"
+		}
+	},
+	"tabBar": {
+		"color": "#7A7E83",
+		"selectedColor": "#ff0000",
+		"borderStyle": "black",
+		"backgroundColor": "#ffffff",
+		"list": [
+			{
+			"pagePath": "pages/home/home",
+			"iconPath": "static/tab/home.svg",
+			"selectedIconPath": "static/tab/home_red.svg",
+			"text": "首页"
+			},
+			{
+			"pagePath": "pages/video/video",
+			"iconPath": "static/tab/video.svg",
+			"selectedIconPath": "static/tab/video_red.svg",
+			"text": "视频"
+			},
+			{
+			"pagePath": "pages/chat/chat",
+			"iconPath": "static/tab/chat.svg",
+			"selectedIconPath": "static/tab/chat_red.svg",
+			"text": "信息"
+			},
+			{
+			"pagePath": "pages/people/people",
+			"iconPath": "static/tab/people.svg",
+			"selectedIconPath": "static/tab/people_red.svg",
+			"text": "通讯录"
+			},
+			{
+			"pagePath": "pages/mine/mine",
+			"iconPath": "static/tab/mine.svg",
+			"selectedIconPath": "static/tab/mine_red.svg",
+			"text": "我"
+			}
+		]
+	}
+
+}

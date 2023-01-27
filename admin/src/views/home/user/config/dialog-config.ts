@@ -30,6 +30,19 @@ const addDialogConfig: IForm = {
       ],
     },
     {
+      field: "password",
+      type: "password",
+      label: "密码",
+      placeholder: "请输入密码",
+      rules: [
+        {
+          required: true,
+          message: "请输入密码",
+          trigger: "blur",
+        },
+      ],
+    },
+    {
       field: "phone",
       type: "input",
       label: "手机号",
@@ -176,6 +189,19 @@ const editDialogConfig: IForm = {
         {
           required: true,
           message: "请输入工号/学号",
+          trigger: "blur",
+        },
+      ],
+    },
+    {
+      field: "password",
+      type: "password",
+      label: "密码",
+      placeholder: "请输入密码",
+      rules: [
+        {
+          required: true,
+          message: "请输入密码",
           trigger: "blur",
         },
       ],
@@ -331,6 +357,22 @@ const detailDialogConfig: IForm = {
         {
           required: true,
           message: "请输入工号/学号",
+          trigger: "blur",
+        },
+      ],
+      otherOptions:{
+        disabled:true
+      }
+    },
+    {
+      field: "password",
+      type: "password",
+      label: "密码",
+      placeholder: "请输入密码",
+      rules: [
+        {
+          required: true,
+          message: "请输入密码",
           trigger: "blur",
         },
       ],

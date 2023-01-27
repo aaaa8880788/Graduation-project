@@ -9,6 +9,7 @@ const multer = require("multer");
 // 导入路径
 const path = require("path");
 
+// 后台接口部分
 // 传统接口部分
 // 超级管理员注册
 exports.registerAdmin = async (req, res) => {
@@ -981,7 +982,7 @@ exports.deleteClass = async (req,res) => {
 // 用户添加
 exports.addUser = async (req,res) => {
   const data = req.body
-  let {type,name,avatar,powerId,organizationId,facultyId,schoolId,classId,className,cardId,phone,score,address} = data
+  let {type,name,avatar,password,powerId,organizationId,facultyId,schoolId,classId,className,cardId,phone,score,address} = data
   if (![0,1].includes(type)) {
     return res.send({
       message: "用户类型必传（0为学生，1为教师）",
@@ -990,6 +991,11 @@ exports.addUser = async (req,res) => {
   if (!name) {
     return res.send({
       message: "姓名必传",
+    });
+  }
+  if (!password) {
+    return res.send({
+      message: "密码必传",
     });
   }
   if (!['number'].includes(typeof facultyId)) {
@@ -1040,7 +1046,9 @@ exports.addUser = async (req,res) => {
         message:"数据已存在，请重新选择"
       })
   }
-  const result = await dbModel.addUser(1,[type,name,avatar,powerId,organizationId,facultyId,schoolId,classId,className,cardId,phone,score,address,moment])
+  // 进行密码加密
+  const newPassword = bcrypt.hashSync(password, 10);
+  const result = await dbModel.addUser(1,[type,name,newPassword,avatar,powerId,organizationId,facultyId,schoolId,classId,className,cardId,phone,score,address,moment])
   res.send({
     code:200,
     message:'添加成功'
@@ -1051,7 +1059,7 @@ exports.addUser = async (req,res) => {
 exports.updateUser = async (req,res) => {
   const data = req.body
   const params = req.query
-  let {type,name,avatar,powerId,organizationId,facultyId,schoolId,classId,className,cardId,phone,score,address} = data
+  let {type,name,avatar,password,powerId,organizationId,facultyId,schoolId,classId,className,cardId,phone,score,address} = data
   let {id} = params
   if([null,undefined].includes(id) || !['number','string'].includes(typeof id)){
     return res.send({
@@ -1068,6 +1076,12 @@ exports.updateUser = async (req,res) => {
   type = type ?? originData[0].type
   name = name ?? originData[0].name
   avatar = avatar ?? originData[0].avatar
+  if(password){
+    // 进行密码加密
+    password = bcrypt.hashSync(password, 10);
+  }else{
+    password = originData[0].password
+  }
   if(Array.isArray(powerId)){
     powerId = JSON.stringify(powerId)
   }else{
@@ -1082,7 +1096,7 @@ exports.updateUser = async (req,res) => {
   phone = phone ?? originData[0].phone
   score = score ?? originData[0].score
   address = address ?? originData[0].address
-  const result = await dbModel.updateUser(1,[type,name,avatar,powerId,organizationId,facultyId,schoolId,classId,className,cardId,phone,score,address,id])
+  const result = await dbModel.updateUser(1,[type,name,password,avatar,powerId,organizationId,facultyId,schoolId,classId,className,cardId,phone,score,address,id])
   res.send({
     code:200,
     message:'修改成功'
@@ -1303,7 +1317,7 @@ exports.deleteArticle = async (req,res) => {
 // 视频添加
 exports.addVedio = async (req,res) => {
   const data = req.body
-  let {title,type,body,vedio,supportUser} = data
+  let {title,type,image,body,vedio,supportUser} = data
   if (!title) {
     return res.send({
       message: "视频标题必传",
@@ -1330,13 +1344,14 @@ exports.addVedio = async (req,res) => {
   }else{
     supportUser = JSON.stringify([])
   }
+  image = image ?? null
   const vedioCount = await dbModel.addVedio(2,[title,type])
   if(vedioCount[0].count){
       return res.send({
         message:"数据已存在，请重新选择"
       })
   }
-  const result = await dbModel.addVedio(1,[title,type,body,vedio,supportUser,moment])
+  const result = await dbModel.addVedio(1,[title,type,image,body,vedio,supportUser,moment])
   res.send({
     code:200,
     message:'添加成功'
@@ -1347,7 +1362,7 @@ exports.addVedio = async (req,res) => {
 exports.updateVedio = async (req,res) => {
   const data = req.body
   const params = req.query
-  let {title,type,body,vedio,supportUser} = data
+  let {title,type,image,body,vedio,supportUser} = data
   let {id} = params
   if([null,undefined].includes(id) || !['number','string'].includes(typeof id)){
     return res.send({
@@ -1365,12 +1380,13 @@ exports.updateVedio = async (req,res) => {
   type = type ?? originData[0].type
   body = body ?? originData[0].body
   vedio = vedio ?? originData[0].vedio
+  image = image ?? originData[0].image
   if(![undefined,null].includes(supportUser)){
     supportUser = JSON.stringify(supportUser)
   }else{
     supportUser = originData[0].supportUser
   }
-  const result = await dbModel.updateVedio(1,[title,type,body,vedio,supportUser,id])
+  const result = await dbModel.updateVedio(1,[title,type,image,body,vedio,supportUser,id])
   res.send({
     code:200,
     message:'修改成功'
@@ -1450,11 +1466,7 @@ exports.deleteVedio = async (req,res) => {
 // 活动添加
 exports.addActive = async (req,res) => {
   const data = req.body
-  let {name,placeId,body,userId,supportUser,joinUser,score} = data
-  supportUser = JSON.stringify(supportUser)
-  joinUser = JSON.stringify(joinUser)
-  isPass =  1
-  score = score ?? 0
+  let {name,placeId,body,userId,score} = data
   if (!name) {
     return res.send({
       message: "name字段（活动名称）必传",
@@ -1475,13 +1487,22 @@ exports.addActive = async (req,res) => {
       message: "userId字段（活动发起人id）必传",
     });
   }
+  if(!['number'].includes(typeof score)){
+    return res.send({
+      message: "活动积分必传",
+    });
+  }
+  const supportUser = JSON.stringify([])
+  const joinUser = JSON.stringify([])
+  const isPass =  1
+  const moment = new Date()
   const activeCount = await dbModel.addActive(2,[name])
   if(activeCount[0].count){
       return res.send({
         message:"数据已存在，请重新选择"
       })
   }
-  const result = await dbModel.addActive(1,[name,placeId,body,userId,supportUser,joinUser,score,isPass])
+  const result = await dbModel.addActive(1,[name,placeId,body,userId,supportUser,joinUser,score,isPass,moment])
   res.send({
     code:200,
     message:'添加成功'
@@ -1491,9 +1512,9 @@ exports.addActive = async (req,res) => {
 // 活动修改
 exports.updateActive = async (req,res) => {
   const data = req.body
-  let {name,placeId,body,userId,supportUser,joinUser,score,isPass,id} = data
-  supportUser = JSON.stringify(supportUser)
-  joinUser = JSON.stringify(joinUser)
+  const params = req.query
+  let {name,placeId,body,userId,supportUser,joinUser,score,isPass} = data
+  let {id} = params
   if([null,undefined].includes(id) || !['number','string'].includes(typeof id)){
     return res.send({
       message: "id字段必传",
@@ -1510,8 +1531,16 @@ exports.updateActive = async (req,res) => {
   placeId = placeId ?? originData[0].placeId
   body = body ?? originData[0].body
   userId = userId ?? originData[0].userId
-  supportUser = supportUser ?? originData[0].supportUser
-  joinUser = joinUser ?? originData[0].joinUser
+  if(Array.isArray(supportUser)){
+    supportUser = JSON.stringify(supportUser)
+  }else{
+    supportUser = originData[0].supportUser
+  }
+  if(Array.isArray(joinUser)){
+    joinUser = JSON.stringify(joinUser)
+  }else{
+    joinUser = originData[0].joinUser
+  }
   score = score ?? originData[0].score
   isPass = isPass ?? originData[0].isPass
   const result = await dbModel.updateActive(1,[name,placeId,body,userId,supportUser,joinUser,score,isPass,id])
@@ -1524,14 +1553,52 @@ exports.updateActive = async (req,res) => {
 // 活动查询
 exports.findActives = async (req,res) => {
   const params = req.query
-  let {page,pageSize} = params
+  let {page,pageSize,name,isPass,moment} = params
   page = page ?? 1
   pageSize = pageSize ?? 10
-  const result = await dbModel.findActives(page,pageSize)
+  name = name ? name : null
+  isPass = isPass ? isPass : null
+  moment = moment ? moment : null
+  const result = await dbModel.findActives(1,[page,pageSize,name,isPass,moment])
+  for (const item of result){
+    item.supportUser = JSON.parse(item.supportUser)
+    item.joinUser = JSON.parse(item.joinUser)
+    item.placeData = (await dbModel.findActives(3,[item.placeId]))[0]
+    item.userData = (await dbModel.findActives(4,[item.userId]))[0]
+  }
+  const total = (await dbModel.findActives(2,[name,isPass,moment])).length
   res.send({
     code:200,
     message:"查询成功",
-    data:result
+    data:result,
+    total:total
+  })
+}
+
+// 活动查询通过id
+exports.findActiveById = async(req,res) => {
+  const params = req.query
+  let {id} = params
+  if(!['number','string'].includes(typeof id) && [null,undefined].includes(id)){
+    return res.send({
+      message:'请传入正确格式的id'
+    })
+  }
+  const count = await dbModel.findActiveById(2,id)
+  if(!count[0].count){
+    return res.send({
+      message:"数据不存在，查询失败"
+    })
+  }
+  const result = await dbModel.findActiveById(1,id)
+  result.forEach(item=>{
+    item.supportUser = JSON.parse(item.supportUser)
+    item.joinUser = JSON.parse(item.joinUser)
+  })
+  res.send({
+    code:200,
+    message:"查询成功",
+    data:result[0]
   })
 }
 
@@ -2165,4 +2232,341 @@ exports.uploadVedio = async (req, res) => {
     message:'视频上传成功',
     data:file
   });
+}
+
+
+// 前台接口部分
+// 公共接口
+
+// 前台获取组织列表
+exports.getOrganizationsList = async (req,res) => {
+  const result = await dbModel.getOrganizationsList()
+  res.send({
+    code:200,
+    message:"组织列表查询成功",
+    data:result,
+  })
+}
+
+// 前台获取学院列表
+exports.getFacultiesList = async (req,res) => {
+  const result = await dbModel.getFacultiesList()
+  for(const item of result){
+    item.value = item.id
+  }
+  res.send({
+    code:200,
+    message:"学院列表查询成功",
+    data:result,
+  })
+}
+
+// 前台获取学校列表
+exports.getSchoolsList = async (req,res) => {
+  const result = await dbModel.getSchoolsList()
+  for(const item of result){
+    item.value = item.id
+  }
+  res.send({
+    code:200,
+    message:"学校列表查询成功",
+    data:result,
+  })
+}
+
+// 前台获取专业班级列表
+exports.getClassesList = async (req,res) => {
+  const result = await dbModel.getClassesList()
+  for(const item of result){
+    item.value = item.id
+    item.classData = JSON.parse(item.classData)
+  }
+  res.send({
+    code:200,
+    message:"专业班级列表查询成功",
+    data:result,
+  })
+}
+// 前台注册接口
+exports.userRegister = async (req,res) => {
+  const data = req.body
+  let {type,name,password,avatar,powerId,organizationId,facultyId,schoolId,classId,className,cardId,phone,score,address} = data
+  if (![0,1].includes(type)) {
+    return res.send({
+      message: "请选择类型",
+    });
+  }
+  if (!name) {
+    return res.send({
+      message: "请输入姓名",
+    });
+  }
+  if(!password){
+    return res.send({
+      message: "请输入密码",
+    });
+  }
+  if (!['number'].includes(typeof facultyId)) {
+    return res.send({
+      message: "请选择学院",
+    });
+  }
+  if (!['number'].includes(typeof schoolId)) {
+    return res.send({
+      message: "请选择学校",
+    });
+  }
+  if (!cardId) {
+    return res.send({
+      message: "请输入工号/学号",
+    });
+  }
+  if (!/\d{9}/.test(Number(cardId))) {
+    return res.send({
+      message: "工号/学号必须由九位数字组成",
+    });
+  }
+  if (!phone) {
+    return res.send({
+      message: "请输入手机号",
+    });
+  }
+  if (!/\d{11}/.test(Number(phone))) {
+    return res.send({
+      message: "手机号必传由十一位数字组成",
+    });
+  }
+  avatar = avatar ?? null
+  if(Array.isArray(powerId)){
+    powerId = JSON.stringify(powerId)
+  }else{
+    powerId = JSON.stringify([])
+  }
+  organizationId = organizationId ?? null
+  classId = classId ? classId : null
+  className = className ? className : null
+  score = score ?? 0
+  address = address ?? null
+  let moment = new Date()
+  const userCount = await dbModel.userRegister(2,[cardId])
+  if(userCount[0].count){
+      return res.send({
+        message:"用户已存在"
+      })
+  }
+  const phoneCount = await dbModel.userRegister(3,[phone])
+  if(phoneCount[0].count){
+      return res.send({
+        message:"该手机号已被注册"
+      })
+  }
+  // 进行密码加密
+  const newPassword = bcrypt.hashSync(password, 10);
+  const result = await dbModel.userRegister(1,[type,name,newPassword,avatar,powerId,organizationId,facultyId,schoolId,classId,className,cardId,phone,score,address,moment])
+  res.send({
+    code:200,
+    message:'注册成功'
+  })
+}
+
+// 前台登录接口
+exports.userLogin = async(req,res) => {
+  let { type, cardId, phone, password } = req.body;
+  if(type === 'phone'){
+    // 手机登录
+    // 根据手机找用户
+    const user = await dbModel.userLogin(1,[phone])
+    // 如果查询到结果为空，说明该用户不存在
+    if (!user[0].count) {
+      return res.send({
+        message: "用户不存在！",
+      });
+    }
+    // 校验密码
+    const data = await dbModel.userLogin(3,[phone])
+    const oldPassword = data[0]?.password
+    const id = data[0].id
+    const isValid = bcrypt.compareSync(password, oldPassword);
+    if (!isValid) {
+      return res.send({
+        message: "用户名或密码错误！",
+      });
+    }
+    // 返回token
+    // 生成 Token 字符串
+    const tokenStr = jwt.sign({id}, config.jwt.jwtSecretKey, {
+      expiresIn: "10h", // token 有效期为 10 个小时
+    });
+    res.send({
+      code: 200,
+      message: "登录成功！",
+      token: tokenStr,
+      userId: id
+    });
+  }else{
+    // 学号/工号登录
+    // 根据学号/工号找用户
+    const user = await dbModel.userLogin(2,[cardId])
+    // 如果查询到结果为空，说明该用户不存在
+    if (!user[0].count) {
+      return res.send({
+        message: "用户不存在！",
+      });
+    }
+    // 校验密码
+    const data = await dbModel.userLogin(3,[cardId])
+    const oldPassword = data[0]?.password
+    const id = data[0].id
+    const isValid = bcrypt.compareSync(password, oldPassword);
+    if (!isValid) {
+      return res.send({
+        message: "用户名或密码错误！",
+      });
+    }
+    // 返回token
+    // 生成 Token 字符串
+    const tokenStr = jwt.sign({id}, config.jwt.jwtSecretKey, {
+      expiresIn: "10h", // token 有效期为 10 个小时
+    });
+    res.send({
+      code: 200,
+      message: "登录成功！",
+      token: tokenStr
+    });
+  }
+}
+
+// 前台获取文章列表
+exports.getArticlesList = async (req,res) => {
+  const result = await dbModel.getArticlesList()
+  for(const item of result){
+    item.supportUser = JSON.parse(item.supportUser)
+  }
+  const type = [
+    {
+      type:0,
+      name:'时事要闻'
+    },
+    {
+      type:1,
+      name:'新思想'
+    },
+    {
+      type:2,
+      name:'党史'
+    },
+    {
+      type:3,
+      name:'党建'
+    },
+    {
+      type:4,
+      name:'推荐'
+    },
+  ]
+  let data = []
+  for(const item of type){
+    if(item.type === 4){
+      item.data = result
+    }else{
+      item.data = result.filter(artItem => artItem.type === item.type)
+    }
+    data.push(item)
+  }
+  res.send({
+    code:200,
+    message:"文章列表查询成功",
+    data:data,
+  })
+}
+
+// 前台获取文章详情
+exports.getArticleDetail = async (req,res) => {
+  const params = req.query
+  let {id} = params
+  if(!['number','string'].includes(typeof id) && [null,undefined].includes(id)){
+    return res.send({
+      message:'请传入正确格式的id'
+    })
+  }
+  const count = await dbModel.getArticleDetail(2,id)
+  if(!count[0].count){
+    return res.send({
+      message:"数据不存在，查询失败"
+    })
+  }
+  const result = await dbModel.getArticleDetail(1,id)
+  result.forEach(item=>{
+    item.supportUser = JSON.parse(item.supportUser)
+  })
+  res.send({
+    code:200,
+    message:"查询成功",
+    data:result[0]
+  })
+}
+
+// 前台获取个人信息
+exports.getUserInfo = async (req,res) => {
+  const params = req.query
+  console.log('params',params);
+  const { userId } = params
+  if(!['number'].includes(typeof Number(userId))){
+    return res.send({
+      message:"用户id必传",
+    })
+  }
+  const result = await dbModel.getUserInfo(1,[userId])
+  for(const item of result){
+    item.powerId = JSON.parse(item.powerId)
+  }
+  res.send({
+    code:200,
+    message:"个人信息查询成功",
+    data:result[0],
+  })
+}
+
+// 前台获取视频列表
+exports.getVedioesList = async (req,res) => {
+  const result = await dbModel.getVedioesList()
+  for(const item of result){
+    item.supportUser = JSON.parse(item.supportUser)
+  }
+  const type = [
+    {
+      type:0,
+      name:'时事要闻'
+    },
+    {
+      type:1,
+      name:'新思想'
+    },
+    {
+      type:2,
+      name:'党史'
+    },
+    {
+      type:3,
+      name:'党建'
+    },
+    {
+      type:4,
+      name:'推荐'
+    },
+  ]
+  let data = []
+  for(const item of type){
+    if(item.type === 4){
+      item.data = result
+    }else{
+      item.data = result.filter(vedioItem => vedioItem.type === item.type)
+    }
+    data.push(item)
+  }
+  res.send({
+    code:200,
+    message:"视频列表查询成功",
+    data:data,
+  })
 }

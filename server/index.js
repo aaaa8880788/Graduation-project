@@ -18,6 +18,7 @@ app.use("/uploads", express.static(path.join(__dirname, "./uploads")));
 
 // 引入服务端路由
 require('./routes/admin/index')(app)
+require('./routes/web/index')(app)
 
 // 定义错误级别中间件
 app.use((err, req, res, next) => {

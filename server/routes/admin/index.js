@@ -135,6 +135,8 @@ const routes = function(app){
   app.post("/admin/api/updateActive",controller.updateActive)
   // 活动查询
   app.get("/admin/api/findActives",controller.findActives)
+  // 活动查询通过id
+  app.get("/admin/api/findActiveById",controller.findActiveById)
   // 活动删除
   app.delete("/admin/api/deleteActive",controller.deleteActive)
 

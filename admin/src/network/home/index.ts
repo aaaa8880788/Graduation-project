@@ -132,56 +132,6 @@ export function deletePlace(url: string, data:any) {
   });
 }
 
-// 获取活动列表
-export function getActivesRequest(url: string, findParams:findType) {  
-  const { page,pageSize,queryInfo } = findParams
-  return dRequest1.get({
-    url: url,
-    params: {
-      page,
-      pageSize,
-      ...queryInfo
-    },
-  });
-}
-
-// 通过id获取活动信息
-export function findActiveById(url: string, id: ActiveId) {  
-  return dRequest1.get({
-    url: url,
-    params: {
-      id
-    }
-  });
-}
-
-// 添加活动
-export function addActive(url: string, data:any) {  
-  return dRequest1.post({
-    url: url,
-    data: data
-  });
-}
-
-// 编辑活动
-export function updateActive(url: string, data:any, id: ActiveId) {  
-  return dRequest1.post({
-    url: url,
-    data: data,
-    params:{
-      id
-    }
-  });
-}
-
-// 删除活动
-export function deleteActive(url: string, data:any) {  
-  return dRequest1.delete({
-    url: url,
-    data: data
-  });
-}
-
 // 获取文章列表
 export function getArticlesRequest(url: string, findParams:findType) {  
   const { page,pageSize,queryInfo } = findParams
@@ -676,6 +626,56 @@ export function updateUser(url: string, data:any, id: UserId) {
 
 // 删除用户
 export function deleteUser(url: string, data:any) {  
+  return dRequest1.delete({
+    url: url,
+    data: data
+  });
+}
+
+// 获取活动列表
+export function getActivesRequest(url: string, findParams:findType) {  
+  const { page,pageSize,queryInfo } = findParams
+  return dRequest1.get({
+    url: url,
+    params: {
+      page,
+      pageSize,
+      ...queryInfo
+    },
+  });
+}
+
+// 通过id获取活动信息
+export function findActiveById(url: string, id: ActiveId) {  
+  return dRequest1.get({
+    url: url,
+    params: {
+      id
+    }
+  });
+}
+
+// 添加活动
+export function addActive(url: string, data:any) {  
+  return dRequest1.post({
+    url: url,
+    data: data
+  });
+}
+
+// 编辑活动
+export function updateActive(url: string, data:any, id: ActiveId) {  
+  return dRequest1.post({
+    url: url,
+    data: data,
+    params:{
+      id
+    }
+  });
+}
+
+// 删除活动
+export function deleteActive(url: string, data:any) {  
   return dRequest1.delete({
     url: url,
     data: data
