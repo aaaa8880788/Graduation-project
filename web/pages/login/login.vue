@@ -268,6 +268,7 @@
 					data: data,
 					success: (res) => {
 						if(res.data.code === 200){
+							console.log('res.data---',res.data);
 							const token = res.data.token
 							const userId = res.data.userId
 							this.$refs.uToast.show({
@@ -275,8 +276,8 @@
 								message: res.data.message,
 								icon:false
 							},)
-							uni.setStorageSync('token',`bearer ${token}`)
-							uni.setStorageSync('userId',userId)
+							uni.setStorageSync('token',JSON.stringify(`bearer ${token}`))
+							uni.setStorageSync('userId',JSON.stringify(userId))
 							setTimeout(()=>{
 								uni.switchTab({
 									url:'/pages/home/home'

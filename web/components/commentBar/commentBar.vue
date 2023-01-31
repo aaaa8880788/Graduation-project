@@ -10,14 +10,24 @@
 				class="chat" 
 				@click="iconClickHandle('chat')">
 				<view class="chat_count">
-					<text>80</text>
+					<text>{{ commentCount }}</text>
 				</view>
 				<u-icon name="chat" size="25"></u-icon>
 			</view>
 			<view 
 				class="star"
 				@click="iconClickHandle('star')">
-				<u-icon name="star" size="25"></u-icon>
+				<u-icon 
+					v-if="!isLight"
+					name="star" 
+					size="25">
+				</u-icon>
+				<u-icon
+					v-else
+					name="star-fill" 
+					size="25"
+					color="#eb5544">
+				</u-icon>
 			</view>
 		</view>
 	</view>
@@ -30,6 +40,16 @@
 			return {
 				
 			};
+		},
+		props:{
+			commentCount:{
+				type:Number,
+				default:0
+			},
+			isLight:{
+				type:Boolean,
+				default:false
+			}
 		},
 		methods:{
 			// 图标点击

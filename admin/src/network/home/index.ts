@@ -3,9 +3,11 @@ import type {
   UserId,
   PlaceId,
   ActiveId,
+  CommentId,
   ArticleId,
   FacultyId,
   GiftId,
+  OrderId,
   OrganizationId,
   PracticeId,
   VedioId,
@@ -676,6 +678,106 @@ export function updateActive(url: string, data:any, id: ActiveId) {
 
 // 删除活动
 export function deleteActive(url: string, data:any) {  
+  return dRequest1.delete({
+    url: url,
+    data: data
+  });
+}
+
+// 获取评论列表
+export function getCommentsRequest(url: string, findParams:findType) {  
+  const { page,pageSize,queryInfo } = findParams
+  return dRequest1.get({
+    url: url,
+    params: {
+      page,
+      pageSize,
+      ...queryInfo
+    },
+  });
+}
+
+// 通过id获取评论信息
+export function findCommentById(url: string, id: CommentId) {  
+  return dRequest1.get({
+    url: url,
+    params: {
+      id
+    }
+  });
+}
+
+// 添加评论
+export function addComment(url: string, data:any) {  
+  return dRequest1.post({
+    url: url,
+    data: data
+  });
+}
+
+// 编辑评论
+export function updateComment(url: string, data:any, id: CommentId) {  
+  return dRequest1.post({
+    url: url,
+    data: data,
+    params:{
+      id
+    }
+  });
+}
+
+// 删除评论
+export function deleteComment(url: string, data:any) {  
+  return dRequest1.delete({
+    url: url,
+    data: data
+  });
+}
+
+// 获取订单列表
+export function getOrdersRequest(url: string, findParams:findType) {  
+  const { page,pageSize,queryInfo } = findParams
+  return dRequest1.get({
+    url: url,
+    params: {
+      page,
+      pageSize,
+      ...queryInfo
+    },
+  });
+}
+
+// 通过id获取订单信息
+export function findOrderById(url: string, id: OrderId) {  
+  return dRequest1.get({
+    url: url,
+    params: {
+      id
+    }
+  });
+}
+
+// 添加订单
+export function addOrder(url: string, data:any) {  
+  return dRequest1.post({
+    url: url,
+    data: data
+  });
+}
+
+// 编辑订单
+export function updateOrder(url: string, data:any, id: OrderId) {  
+  return dRequest1.post({
+    url: url,
+    data: data,
+    params:{
+      id
+    }
+  });
+}
+
+// 删除订单
+export function deleteOrder(url: string, data:any) {  
   return dRequest1.delete({
     url: url,
     data: data

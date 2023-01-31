@@ -10,6 +10,8 @@ type VedioId = number | string;
 type SchoolId = number | string;
 type RoleId = number | string;
 type ClassId = number | string;
+type CommentId = number | string;
+type OrderId = number | string;
 interface findType {
   pageSize?: number;
   page?: number;
@@ -20,9 +22,11 @@ export type {
   UserId,
   PlaceId,
   ActiveId,
+  CommentId,
   ArticleId,
   FacultyId,
   GiftId,
+  OrderId,
   OrganizationId,
   PracticeId,
   VedioId,

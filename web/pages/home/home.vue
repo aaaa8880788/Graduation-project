@@ -37,7 +37,7 @@
 </template>
 
 <script>
-	import { formateString } from '../../utils/dataFormate.js'
+	import { formateUtcString } from '../../utils/dataFormate.js'
 	export default {
 		data() {
 			return {
@@ -65,7 +65,7 @@
 					url: `http://localhost:3000/web/api/getArticlesList`,
 					method: 'GET',
 					header:{
-						Authorization:uni.getStorageSync('token')
+						Authorization:uni.getStorageSync('token') ? JSON.parse(uni.getStorageSync('token')) : ''
 					},
 					success: (res) => {
 						if(res.data.code === 200){
@@ -95,7 +95,7 @@
 				})
 			},
 			transformDate(date,format){
-				return formateString(date,format)
+				return formateUtcString(date,format)
 			},
 			// 文章点击触发
 			articleClickHandle(item){

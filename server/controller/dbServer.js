@@ -8,6 +8,8 @@ const jwt = require("jsonwebtoken");
 const multer = require("multer");
 // 导入路径
 const path = require("path");
+// 导入工具函数
+const utils = require('../utils/utils')
 
 // 后台接口部分
 // 传统接口部分
@@ -2099,9 +2101,10 @@ exports.addComment = async (req,res) => {
 // 评论修改
 exports.updateComment = async (req,res) => {
   const data = req.body
-  let {content,commentType,userId,fatherId,status,id} = data
-  let moment = new Date()
-  if([null,undefined].includes(id) || !['number','string'].includes(typeof id)){
+  const params = req.query
+  let {content,commentType,userId,fatherId,status,supportUser} = data
+  let {id} = params
+  if(!['number','string'].includes(typeof (Number(id)))){
     return res.send({
       message: "id字段必传",
     });
@@ -2118,7 +2121,13 @@ exports.updateComment = async (req,res) => {
   userId = userId ?? originData[0].userId
   fatherId = fatherId ?? originData[0].fatherId
   status = status ?? originData[0].status
-  const result = await dbModel.updateComment(1,[content,commentType,userId,fatherId,status,moment,id])
+  let moment = originData[0].moment
+  if(Array.isArray(supportUser)){
+    supportUser = JSON.stringify(supportUser)
+  }else{
+    supportUser = originData[0].supportUser
+  }
+  const result = await dbModel.updateComment(1,[content,commentType,userId,fatherId,status,supportUser,moment,id])
   res.send({
     code:200,
     message:'修改成功'
@@ -2128,14 +2137,52 @@ exports.updateComment = async (req,res) => {
 // 评论查询
 exports.findComments = async (req,res) => {
   const params = req.query
-  let {page,pageSize} = params
+  let { page,pageSize,commentType,status,moment } = params
   page = page ?? 1
   pageSize = pageSize ?? 10
-  const result = await dbModel.findComments(page,pageSize)
+  if(![0,1,2].includes(commentType)){
+    commentType = null
+  }
+  if(![0,1].includes(commentType)){
+    status = null
+  }
+  moment = moment ? moment : null
+  const result = await dbModel.findComments(1,[page,pageSize,commentType,status,moment])
+  result.forEach(item=>{
+    item.supportUser = JSON.parse(item.supportUser)
+  })
+  const total = (await dbModel.findComments(2,[commentType,status,moment])).length
   res.send({
     code:200,
     message:"查询成功",
-    data:result
+    data:result,
+    total:total
+  })
+}
+
+// 评论查询通过id
+exports.findCommentById = async(req,res) => {
+  const params = req.query
+  let {id} = params
+  if(!['number','string'].includes(typeof id) && [null,undefined].includes(id)){
+    return res.send({
+      message:'请传入正确格式的id'
+    })
+  }
+  const count = await dbModel.findCommentById(2,id)
+  if(!count[0].count){
+    return res.send({
+      message:"数据不存在，查询失败"
+    })
+  }
+  const result = await dbModel.findCommentById(1,id)
+  result.forEach(item=>{
+    item.supportUser = JSON.parse(item.supportUser)
+  })
+  res.send({
+    code:200,
+    message:"查询成功",
+    data:result[0]
   })
 }
 
@@ -2154,6 +2201,98 @@ exports.deleteComment = async (req,res) => {
     })
   }
   const result = await dbModel.deleteComment(1,id)
+  res.send({
+      code:200,
+      message:"删除成功"
+  })
+}
+
+// 订单编辑
+exports.updateOrder = async (req,res) => {
+  const data = req.body
+  const params = req.query
+  let {status} = data
+  let {id} = params
+  if(!['number'].includes(typeof Number(id))){
+    return res.send({
+      message:'请传入正确格式的id'
+    })
+  }
+  const count = await dbModel.updateOrder(2,[id])
+  if(!count[0].count){
+    return res.send({
+      message:"数据不存在，修改失败"
+    })
+  }
+  const originData = await dbModel.updateOrder(3,[id])
+  status = status ?? originData[0].status
+  const result = await dbModel.updateOrder(1,[status,id])
+  res.send({
+    code:200,
+    message:'修改成功'
+  })
+}
+
+// 订单查询
+exports.findOrders = async (req,res) => {
+  const params = req.query
+  let {page,pageSize,status,moment} = params
+  page = page ?? 1
+  pageSize = pageSize ?? 10
+  status = status ? status : null
+  moment = moment ? moment : null
+  const result = await dbModel.findOrders(1,[page,pageSize,status,moment])
+  const total = (await dbModel.findOrders(2,[status,moment])).length
+  for(const item of result){
+    item.giftData = (await dbModel.findOrders(3,[item.giftId]))[0]
+    item.userData = (await dbModel.findOrders(4,[item.userId]))[0]
+  }
+  res.send({
+    code:200,
+    message:"查询成功",
+    data:result,
+    total:total
+  })
+}
+
+// 订单查询通过id
+exports.findOrderById = async(req,res) => {
+  const params = req.query
+  let {id} = params
+  if(!['number'].includes(typeof Number(id))){
+    return res.send({
+      message:'请传入正确格式的id'
+    })
+  }
+  const count = await dbModel.findOrderById(2,id)
+  if(!count[0].count){
+    return res.send({
+      message:"数据不存在，查询失败"
+    })
+  }
+  const result = await dbModel.findOrderById(1,id)
+  res.send({
+    code:200,
+    message:"查询成功",
+    data:result[0]
+  })
+}
+
+// 订单删除
+exports.deleteOrder = async (req,res) => {
+  const { id } = req.body
+  if(!['number'].includes(typeof Number(id))){
+    return res.send({
+      message:'请传入正确格式的id'
+    })
+  }
+  const count =  await dbModel.deleteOrder(2,id)
+  if(!count[0].count){
+    return res.send({
+      message:"数据不存在，删除失败"
+    })
+  }
+  const result = await dbModel.deleteOrder(1,id)
   res.send({
       code:200,
       message:"删除成功"
@@ -2371,6 +2510,7 @@ exports.userRegister = async (req,res) => {
 
 // 前台登录接口
 exports.userLogin = async(req,res) => {
+  console.log('======');
   let { type, cardId, phone, password } = req.body;
   if(type === 'phone'){
     // 手机登录
@@ -2506,10 +2646,35 @@ exports.getArticleDetail = async (req,res) => {
   })
 }
 
+// 前台获取视频详情
+exports.getVedioDetail = async (req,res) => {
+  const params = req.query
+  let {id} = params
+  if(!['number','string'].includes(typeof id) && [null,undefined].includes(id)){
+    return res.send({
+      message:'请传入正确格式的id'
+    })
+  }
+  const count = await dbModel.getVedioDetail(2,id)
+  if(!count[0].count){
+    return res.send({
+      message:"数据不存在，查询失败"
+    })
+  }
+  const result = await dbModel.getVedioDetail(1,id)
+  result.forEach(item=>{
+    item.supportUser = JSON.parse(item.supportUser)
+  })
+  res.send({
+    code:200,
+    message:"查询成功",
+    data:result[0]
+  })
+}
+
 // 前台获取个人信息
 exports.getUserInfo = async (req,res) => {
   const params = req.query
-  console.log('params',params);
   const { userId } = params
   if(!['number'].includes(typeof Number(userId))){
     return res.send({
@@ -2518,7 +2683,35 @@ exports.getUserInfo = async (req,res) => {
   }
   const result = await dbModel.getUserInfo(1,[userId])
   for(const item of result){
-    item.powerId = JSON.parse(item.powerId)
+    if(['number'].includes(typeof Number(item.powerId))){
+      item.powerId = JSON.parse(item.powerId)
+    }
+    if(['number'].includes(typeof Number(item.classId))){
+      item.classData = (await dbModel.getUserInfo(2,[item.classId]))[0]
+    }else{
+      item.classData = {}
+    }
+    if(['number'].includes(typeof Number(item.facultyId))){
+      item.facultyData = (await dbModel.getUserInfo(3,[item.facultyId]))[0]
+    }else{
+      item.facultyData = {}
+    }
+    if(['number'].includes(typeof Number(item.organizationId))){
+      item.organizationData = (await dbModel.getUserInfo(4,[item.organizationId]))[0]
+    }else{
+      item.organizationData = {}
+    }
+    if(['number'].includes(typeof Number(item.schoolId))){
+      item.schoolData = (await dbModel.getUserInfo(5,[item.schoolId]))[0]
+    }else{
+      item.schoolData = {}
+    }
+    if(item.type === 0){
+      item.typeData = '学生'
+    }else{
+      item.typeData = '教师'
+    }
+    item.address = item.address ?? ''
   }
   res.send({
     code:200,
@@ -2568,5 +2761,352 @@ exports.getVedioesList = async (req,res) => {
     code:200,
     message:"视频列表查询成功",
     data:data,
+  })
+}
+
+// 前台获取具体文章或视频列表评论列表接口
+exports.getCommentList = async(req,res) => {
+  const params = req.query
+  let {fatherId} = params
+  if(!['number','string'].includes(typeof fatherId) && [null,undefined].includes(fatherId)){
+    return res.send({
+      message:'请传入正确格式的fatherId'
+    })
+  }
+  const result = await dbModel.getCommentList(1,[fatherId])
+  for(const item of result){
+    item.supportUser = JSON.parse(item.supportUser)
+    item.fatherData = (await dbModel.getCommentList(2,[item.fatherId]))[0]
+    item.userData = (await dbModel.getCommentList(3,[item.userId]))[0]
+  }
+  const data = result.filter(item => item.status === 1)
+  res.send({
+    code:200,
+    message:"评论列表查询成功~",
+    data:data,
+  })
+}
+
+// 前台发布评论接口
+exports.publishComment = async (req,res) => {
+  const data = req.body
+  const { content,commentType,userId,fatherId } = data
+  if(!content){
+    return res.send({
+      message:"评论内容不可为空~"
+    })
+  }
+  if(![0,1,2].includes(commentType)){
+    return res.send({
+      message:"评论类型不可为空~"
+    })
+  }
+  if(!['number'].includes(typeof (Number(userId)))){
+    return res.send({
+      message:"评论用户id不可为空~"
+    })
+  }
+  if(!['number'].includes(typeof (Number(fatherId)))){
+    return res.send({
+      message:"所评论的文章或视频id不可为空~"
+    })
+  }
+  let status = 0
+  let supportUser = JSON.stringify([])
+  let moment = new Date()
+  const result = await dbModel.publishComment(1,[content,commentType,userId,fatherId,status,supportUser,moment])
+  res.send({
+    code:200,
+    message:"评论成功,待管理员评审通过~",
+  })
+}
+
+// 前台评论点赞
+exports.supportComment = async (req,res) => {
+  const data = req.body
+  let { id,userId } = data
+  if(!['number'].includes(typeof (Number(id)))){
+    return res.send({
+      message:"评论id不可为空~"
+    })
+  }
+  if(!['number'].includes(typeof (Number(userId)))){
+    return res.send({
+      message:"评论用户id不可为空~"
+    })
+  }
+  const originData = await dbModel.supportComment(1,[id])
+  let supportUser = JSON.parse(originData[0].supportUser)
+  let messgae
+  const index = supportUser.findIndex(item => item == userId)
+  if(index === -1){
+    supportUser.push(userId)
+    messgae = '点赞成功~'
+  }else{
+    supportUser.splice(index,1)
+    messgae = '取消点赞成功~'
+  }
+  supportUser = JSON.stringify(supportUser)
+  const result = await dbModel.supportComment(2,[supportUser,id])
+  res.send({
+    code:200,
+    message: messgae
+  })
+}
+
+// 前台文章/视频/活动收藏
+exports.userCollect = async (req,res) => {
+  const data = req.body
+  let { type,id,userId } = data
+  if(![0,1,2].includes(type)){
+    // 0文章1视频2活动
+    return res.send({
+      message:"类型type不可为空~"
+    })
+  }
+  if(!['number'].includes(typeof (Number(id)))){
+    return res.send({
+      message:"评论id不可为空~"
+    })
+  }
+  if(!['number'].includes(typeof (Number(userId)))){
+    return res.send({
+      message:"评论用户id不可为空~"
+    })
+  }
+  const originData = await dbModel.userCollect([type,'select'],[id])
+  let supportUser = JSON.parse(originData[0].supportUser)
+  let messgae
+  const index = supportUser.findIndex(item => item == userId)
+  if(index === -1){
+    supportUser.push(userId)
+    messgae = '收藏成功~'
+  }else{
+    supportUser.splice(index,1)
+    messgae = '取消收藏成功~'
+  }
+  supportUser = JSON.stringify(supportUser)
+  const result = await dbModel.userCollect([type,'update'],[supportUser,id])
+  res.send({
+    code:200,
+    message: messgae
+  })
+}
+
+// 前台获取题目列表
+exports.getPracticeList = async (req,res) => {
+  const result = await dbModel.getPracticeList()
+  for(const item of result){
+    item.options = JSON.parse(item.options)
+    item.answer = JSON.parse(item.answer)
+  }
+  const data = utils.getRandomArrayElements(result,5)
+  res.send({
+    code:200,
+    message:"文章列表查询成功",
+    data:data,
+  })
+}
+
+// 前台用户数据更新接口
+exports.updateUserInfo = async (req,res) => {
+  const data = req.body
+  const params = req.query
+  let {name,password,avatar,phone,score,address,signMoment,sex,birthday} = data
+  let {id} = params
+  if(!['number'].includes(typeof Number(id))){
+    return res.send({
+      message: "id字段必传",
+    });
+  }
+  const originData = await dbModel.updateUserInfo(2,[id])
+  name = name ?? originData[0].name
+  if(password){
+    // 进行密码加密
+    password = bcrypt.hashSync(password, 10);
+  }else{
+    password = originData[0].password
+  }
+  avatar = avatar ?? originData[0].avatar
+  phone = phone ?? originData[0].phone
+  address = address ?? originData[0].address
+  score = score ?? originData[0].score
+  if(signMoment){
+    const isToday = utils.confirmIsToday(originData[0].signMoment)
+    if(isToday){
+      return res.send({
+        message:'每天只能签到一次~'
+      })
+    }
+    score = originData[0].score + 1
+  }else{
+    signMoment = originData[0].signMoment
+  }
+  sex = sex ?? originData[0].sex
+  birthday = birthday ?? originData[0].birthday
+  const result = await dbModel.updateUserInfo(1,[name,password,avatar,phone,score,address,signMoment,sex,birthday,id])
+  res.send({
+    code:200,
+    message:'修改成功'
+  })
+}
+
+// 前台获取收藏文章列表
+exports.getLoveArticleList = async(req,res) => {
+  const params = req.query
+  let {id} = params
+  if(!['number'].includes(typeof Number(id))){
+    return res.send({
+      message: "id字段必传",
+    });
+  }
+  const result = await dbModel.getLoveArticleList()
+  result.forEach(item=>{
+    item.supportUser = JSON.parse(item.supportUser)
+  })
+  const data = result.filter(item => {
+    return item.supportUser.some(user => user == id)
+  })
+  res.send({
+    code:200,
+    message:"查询成功",
+    data:data
+  })
+}
+
+// 前台获取收藏视频列表
+exports.getLoveVedioList = async(req,res) => {
+  const params = req.query
+  let {id} = params
+  if(!['number'].includes(typeof Number(id))){
+    return res.send({
+      message: "id字段必传",
+    });
+  }
+  const result = await dbModel.getLoveVedioList()
+  result.forEach(item=>{
+    item.supportUser = JSON.parse(item.supportUser)
+  })
+  const data = result.filter(item => {
+    return item.supportUser.some(user => user == id)
+  })
+  res.send({
+    code:200,
+    message:"查询成功",
+    data:data
+  })
+}
+
+// 前台获取评论列表
+exports.getCommentList = async(req,res) => {
+  const params = req.query
+  let {id} = params
+  if(!['number'].includes(typeof Number(id))){
+    return res.send({
+      message: "id字段必传",
+    });
+  }
+  const result = await dbModel.getCommentList([id])
+  result.forEach(item=>{
+    item.supportUser = JSON.parse(item.supportUser)
+  })
+  res.send({
+    code:200,
+    message:"查询成功",
+    data:result
+  })
+}
+
+// 前台获取商品列表
+exports.getGoodList = async(req,res) => {
+  const result = await dbModel.getGoodList()
+  res.send({
+    code:200,
+    message:"查询成功",
+    data:result
+  })
+}
+
+// 前台生成订单
+exports.addOrder = async(req,res) => {
+  const data = req.body
+  let { userId,giftId,score,address } = data
+  userId = Number(userId)
+  giftId = Number(giftId)
+  score = Number(score)
+  if(!['number'].includes(typeof userId)){
+    return res.send({
+      message:"购买用户id不可为空~"
+    })
+  }
+  if(!['number'].includes(typeof giftId)){
+    return res.send({
+      message:"兑换礼品id不可为空~"
+    })
+  }
+  if(!['number'].includes(typeof score)){
+    return res.send({
+      message:"订单金额不可为空~"
+    })
+  }
+  if(!address){
+    return res.send({
+      message:"地址不可为空~"
+    })
+  }
+  // 默认为未发货状态
+  let status = 0 
+  let moment = new Date()
+
+  const userData = await dbModel.addOrder(2,[userId])
+  const afterScore = userData[0].score - score
+  const giftData = await dbModel.addOrder(4,[giftId])
+  const afterTotal = giftData[0].total - 1
+  if(afterScore < 0){
+    return res.send({
+      message:'兑换失败，积分不足~'
+    })
+  }
+  if(afterTotal < 0){
+    return res.send({
+      message:'兑换失败，商品库存不足~'
+    })
+  }
+
+  // 生成订单
+  const result = await dbModel.addOrder(1,[userId,giftId,score,status,address,moment])
+  // 扣除用户score
+  await dbModel.addOrder(3,[afterScore,userId])
+  // 商品库存-1
+  await dbModel.addOrder(5,[afterTotal,giftId])
+  res.send({
+    code:200,
+    message:"订单生成成功~",
+  })
+}
+
+// 前台获取订单列表
+exports.getOrderList = async(req,res) => {
+  const result = await dbModel.getOrderList(1)
+  for(const item of result){
+    item.giftData = (await dbModel.getOrderList(2,[item.giftId]))[0]
+    item.userData = (await dbModel.getOrderList(3,[item.userId]))[0]
+  }
+  res.send({
+    code:200,
+    message:"查询成功",
+    data:result
+  })
+}
+
+// 前台删除订单
+exports.deleteOrder = async(req,res) => {
+  const data = req.body
+  const { id } = data
+  const result = await dbModel.deleteOrder(1,[id])
+  res.send({
+    code:200,
+    message:"订单删除成功~",
+    data:result
   })
 }

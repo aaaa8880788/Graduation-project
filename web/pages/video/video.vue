@@ -47,7 +47,7 @@
 </template>
 
 <script>
-	import { formateString } from '../../utils/dataFormate.js'
+	import { formateUtcString } from '../../utils/dataFormate.js'
 	export default {
 		data() {
 			return {
@@ -71,14 +71,14 @@
 				this.currentActive = item
 			},
 			transformDate(date,format){
-				return formateString(date,format)
+				return formateUtcString(date,format)
 			},
 			getVedioList(){
 				uni.request({
 					url: `http://localhost:3000/web/api/getVedioesList`,
 					method: 'GET',
 					header:{
-						Authorization:uni.getStorageSync('token')
+						Authorization:uni.getStorageSync('token') ? JSON.parse(uni.getStorageSync('token')) : ''
 					},
 					success: (res) => {
 						if(res.data.code === 200){
@@ -108,7 +108,9 @@
 				})
 			},
 			vedioClickHandle(item){
-				console.log('item---',item);
+				uni.navigateTo({
+					url:`/pages/vedioDetail/vedioDetail?vedioId=${item.id}`,
+				})
 			}
 		},
 		onLoad() {

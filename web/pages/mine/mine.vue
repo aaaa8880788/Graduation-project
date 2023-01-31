@@ -6,7 +6,9 @@
 		<scroll-view
 			class="mine_content"
 			scroll-y="true" >
-			<view class="mine_content_header">
+			<view 
+				class="mine_content_header"
+				@click="myInfoClickHandle">
 				<view class="header_left">
 					<image 
 						v-if="userInfo.avatar"
@@ -113,6 +115,7 @@
 					duration:2000,
 					beforeClose:true
 				},
+				currentDialogType:'',
 				studyData: [
 					{
 						title: '获取积分',
@@ -166,7 +169,7 @@
 					url: `http://localhost:3000/web/api/getUserInfo`,
 					method: 'GET',
 					header:{
-						Authorization:uni.getStorageSync('token')
+						Authorization:uni.getStorageSync('token') ? JSON.parse(uni.getStorageSync('token')) : ''
 					},
 					data:{
 						userId:this.userId
@@ -200,22 +203,34 @@
 			},
 			// 对话框关闭按钮点击触发
 			dialogCloseHandle(){
+				this.currentDialogType = ''
 				this.$refs.tipDialogRef.close()
 			},
 			dialogConfirmHandle(){
+				if(this.currentDialogType === '我要答题'){
+					uni.navigateTo({
+						url:'/pages/doPractice/doPractice'
+					})
+				}
 				this.$refs.tipDialogRef.close()
+				this.currentDialogType = ''
 			},
 			typeItemHandle(item){
 				if(item.title === '获取积分'){
+					this.currentDialogType = item.title
 					this.popupDialog.content = '可通过签到、浏览文章、观看视频、答题获取积分，积分可用来兑换商品'
 					this.$refs.tipDialogRef.open()
 				}else{
-					console.log('点击了我要答题');
+					this.popupDialog.content = '准备好开始答题了吗？点击确定即开始答题'
+					this.currentDialogType = item.title
+					this.$refs.tipDialogRef.open()
 				}
 			},
 			// 点击积分兑换触发
 			goStoreHandle(){
-				console.log('点击了积分兑换');
+				uni.navigateTo({
+					url:'/pages/scoreStore/scoreStore'
+				})
 			},
 			// 段位转化
 			levelTransform(score){
@@ -231,11 +246,93 @@
 			},
 			// 服务点击触发
 			serviceClickHandle(item){
-				console.log(item.title)
+				switch (item.title){
+					case '签到服务':
+						uni.request({
+							url: `http://localhost:3000/web/api/updateUserInfo?id=${this.userId}`,
+							method: 'POST',
+							header:{
+								Authorization:uni.getStorageSync('token') ? JSON.parse(uni.getStorageSync('token')) : ''
+							},
+							data:{
+								signMoment:new Date()
+							},
+							success: (res) => {
+								if(res.data.code === 200){
+									this.$refs.uToast.show({
+										type: 'success',
+										message: '签到成功~',
+										icon:false
+									})
+									this.getUserInfo()
+								}else if(res.data.code === 401){
+									this.$refs.uToast.show({
+										type: 'error',
+										message: res.data.message,
+										icon:false
+									},)
+									setTimeout(()=>{
+										uni.redirectTo({
+											url:'/pages/login/login'
+										})
+									},2000)
+								}else{
+									this.$refs.uToast.show({
+										type: 'error',
+										message: res.data.message,
+										icon:false
+									},)
+								}
+							},
+							fail: (err) => {
+								console.log('err',err);
+							}
+						})
+						break;
+					case "收藏文章":
+						uni.navigateTo({
+							url: '/pages/loveArticle/loveArticle'
+						})
+						break;
+					case "收藏视频":
+						uni.navigateTo({
+							url: '/pages/loveVedio/loveVedio'
+						})
+						break;
+					case "我的订单":
+						uni.navigateTo({
+							url: '/pages/myOrder/myOrder'
+						})
+						break;
+					case "我的评论":
+						uni.navigateTo({
+							url: '/pages/myComment/myComment'
+						})
+						break;
+					case "活动列表":
+						uni.navigateTo({
+							url: '/pages/active/active'
+						})
+						break;
+					case "参与活动":
+						break;
+					case "个人信息":
+						uni.navigateTo({
+							url: '/pages/myInfo/myInfo'
+						})
+						break;
+				}
+			},
+			myInfoClickHandle(){
+				uni.navigateTo({
+					url:'/pages/myInfo/myInfo'
+				})
 			}
 		},
 		onLoad() {
 			this.userId = uni.getStorageSync('userId')
+		},
+		onShow(){
 			this.getUserInfo()
 		}
 	}

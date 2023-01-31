@@ -6,6 +6,7 @@
 				@clickLeft="navLeftHandle"/>
 		</view>
 		<scroll-view 
+			v-if="articleData"
 			class="article_content"
 			scroll-y="true"
 			:scroll-top="scrollTop"
@@ -21,63 +22,99 @@
 			<view class="article_footer">
 				<view class="article_footer_left">
 					<text class="font">评论</text>
-					<text>999</text>
+					<text>{{ commentList.length }}</text>
 				</view>
 				<view class="article_footer_right">
 					<text class="font">收藏</text>
-					<text>999</text>
+					<text>{{ articleData.supportUser.length }}</text>
 				</view>
 			</view>
 			<view class="commentList">
 				<view class="comment_header">
 					<text class="comment_title">观点</text>
 				</view>
-				<view class="comment_List">
+				<view 
+					v-if="commentList.length"
+					class="comment_List">
 					<view 
 						class="comment_item"
-						v-for="item in 2">
+						v-for="item in commentList">
 						<view class="comment_left">
-							<image 
+							<image
+								v-if="item.userData.avatar"
 								class="default" 
-								src="../../static/user_default.png"></image>
+								:src="item.userData.avatar">
+							</image>
+							<image 
+								v-else
+								class="default" 
+								src="../../static/user_default.png">
+							</image>
 						</view>
 						<view class="comment_right">
 							<view class="comment_right_title">
 								<view class="comment_name">
-									<text>吴文光</text>
+									<text>{{ item.userData.name }}</text>
 								</view>
-								<view class="comment_support">
-									<text class="count">5</text>
+								<view 
+									class="comment_support" 
+									@click="supportCommentHandle(item)">
+									<text class="count">{{ item.supportUser.length }}</text>
 									<u-icon 
+										v-if="isSupport(item.supportUser)"
+										name="thumb-up-fill" 
+										color="#eb5544"
+										size="16">
+									</u-icon>
+									<u-icon
+										v-else
 										name="thumb-up" 
 										color="#a6a6a6"
-										size="16"></u-icon>
+										size="16">
+									</u-icon>
 								</view>
 							</view>
 							<view class="comment_right_content">
-								<text>人类命运与共，携手共进</text>
+								<text>{{ item.content }}</text>
 							</view>
 							<view class="comment_right_footer">
-								<text class="moment">11小时前</text>
+								<text class="moment">{{ getLastTime(item.moment) }}</text>
 								<text class="center">·</text>
 								<text class="reply">回复</text>
 							</view>
 						</view>
 					</view>
 				</view>
+				<u-empty
+					v-else
+					mode="comment"
+					icon="http://cdn.uviewui.com/uview/empty/comment.png">
+				</u-empty>
 			</view>
 		</scroll-view>
 		<commentBar 
+			:commentCount="commentList.length"
+			:isLight="isLight"
 			@iconClick="iconClickHandle"
 			@publishClick="publishClickHandle">
 		</commentBar>
 		<backTop 
 			:isShowBackTop="isShowBackTop"
-			@backTopClick="backTopClickHandle"></backTop>
+			@backTopClick="backTopClickHandle">
+		</backTop>
+		<publishComment 
+			v-model="commentContent"
+			:isShowPopup="isShowPopup"
+			@popupCloseBtnClick="popupCloseHandle"
+			@popupPublishClick="popupPublishHandle">
+		</publishComment>
+		<!-- 提示组件 -->
+		<u-toast ref="uToast"></u-toast>
 	</view>
 </template>
 
 <script>
+	import { getLastTime } from '../../utils/dataFormate.js'
 	export default {
 		data() {
 			return {
@@ -91,24 +128,135 @@
 					color:'#fff'
 				},
 				articleId:'',
+				userId:'',
 				isShowBackTop:false,
 				scrollTop:0,
 				setScrollTop:0,
-				articleData:{},
-				commentList:[]
+				articleData:{
+					supportUser:[]
+				},
+				commentList:[],
+				isShowPopup:false,
+				commentContent:'',
+				isLight:false
 			};
 		},
+		watch:{
+			articleData:{
+				handler(newValue,oldValue){
+					if(newValue.supportUser.length){
+						const index = newValue.supportUser.findIndex(item => item === this.userId)
+						if(index === -1){
+							this.isLight = false
+						}else{
+							this.isLight = true
+						}
+					}else{
+						this.isLight = false
+					}
+				},
+				deep:true
+			}
+		},
 		methods:{
+			// 评论点赞
+			supportCommentHandle(item){
+				const supportComment = {
+					id:item.id,
+					userId:this.userId
+				}
+				uni.request({
+					url: `http://localhost:3000/web/api/supportComment`,
+					method: 'POST',
+					header:{
+						Authorization:uni.getStorageSync('token') ? JSON.parse(uni.getStorageSync('token')) : ''
+					},
+					data:{
+						...supportComment
+					},
+					success: (res) => {
+						if(res.data.code === 200){
+							this.getCommentList()
+							this.$refs.uToast.show({
+								type: 'success',
+								message: res.data.message,
+								icon:false
+							})
+						}else if(res.data.code === 401){
+							this.$refs.uToast.show({
+								type: 'error',
+								message: res.data.message,
+								icon:false
+							},)
+							setTimeout(()=>{
+								uni.redirectTo({
+									url:'/pages/login/login'
+								})
+							},2000)
+						}else{
+							this.$refs.uToast.show({
+								type: 'error',
+								message: res.data.message,
+								icon:false
+							})
+						}
+					},
+					fail: (err) => {
+						console.log('err',err);
+					}
+				})
+			},
 			// 导航栏左侧按钮点击触发
 			navLeftHandle(){
 				uni.navigateBack()
+			},
+			getLastTime(time){
+				return getLastTime(time)
+			},
+			getCommentList(){
+				uni.request({
+					url: `http://localhost:3000/web/api/getCommentList`,
+					method: 'GET',
+					header:{
+						Authorization:uni.getStorageSync('token') ? JSON.parse(uni.getStorageSync('token')) : ''
+					},
+					data:{
+						fatherId: this.articleId
+					},
+					success: (res) => {
+						if(res.data.code === 200){
+							this.commentList = res.data.data
+							console.log('commentList',this.commentList)
+						}else if(res.data.code === 401){
+							this.$refs.uToast.show({
+								type: 'error',
+								message: res.data.message,
+								icon:false
+							},)
+							setTimeout(()=>{
+								uni.redirectTo({
+									url:'/pages/login/login'
+								})
+							},2000)
+						}else{
+							this.$refs.uToast.show({
+								type: 'error',
+								message: res.data.message,
+								icon:false
+							},)
+						}
+					},
+					fail: (err) => {
+						console.log('err',err);
+					}
+				})
 			},
 			getArticleDetail(){
 				uni.request({
 					url: `http://localhost:3000/web/api/getArticleDetail`,
 					method: 'GET',
 					header:{
-						Authorization:uni.getStorageSync('token')
+						Authorization:uni.getStorageSync('token') ? JSON.parse(uni.getStorageSync('token')) : ''
 					},
 					data:{
 						id: this.articleId
@@ -155,10 +303,56 @@
 					})
 				}else{
 					// 收藏图标点击
+					const userCollect = {
+						type:0,
+						id:this.articleId,
+						userId:this.userId
+					}
+					uni.request({
+						url: `http://localhost:3000/web/api/userCollect`,
+						method: 'POST',
+						header:{
+							Authorization:uni.getStorageSync('token') ? JSON.parse(uni.getStorageSync('token')) : ''
+						},
+						data:{
+							...userCollect
+						},
+						success: (res) => {
+							if(res.data.code === 200){
+								this.getArticleDetail()
+								this.$refs.uToast.show({
+									type: 'success',
+									message: res.data.message,
+									icon:false
+								})
+							}else if(res.data.code === 401){
+								this.$refs.uToast.show({
+									type: 'error',
+									message: res.data.message,
+									icon:false
+								},)
+								setTimeout(()=>{
+									uni.redirectTo({
+										url:'/pages/login/login'
+									})
+								},2000)
+							}else{
+								this.$refs.uToast.show({
+									type: 'error',
+									message: res.data.message,
+									icon:false
+								})
+							}
+						},
+						fail: (err) => {
+							console.log('err',err);
+						}
+					})
 				}
 			},
 			// 发表观点点击
 			publishClickHandle(){
+				this.isShowPopup = true
 				this.scrollTop = 0
 				this.$nextTick(()=>{
 					this.scrollTop = this.setScrollTop
@@ -183,12 +377,76 @@
 				this.$nextTick(()=>{
 					this.scrollTop = 0
 				})
+			},
+			// 评论弹出层关闭触发
+			popupCloseHandle(){
+				this.commentContent = ''
+				this.isShowPopup = false
+			},
+			// 发布评论点击触发
+			popupPublishHandle(value){
+				const publishData = {
+					content:value,
+					commentType:0,// 0 为文章类型
+					userId:this.userId,
+					fatherId:this.articleId
+				}
+				uni.request({
+					url: `http://localhost:3000/web/api/publishComment`,
+					method: 'POST',
+					header:{
+						Authorization:uni.getStorageSync('token') ? JSON.parse(uni.getStorageSync('token')) : ''
+					},
+					data:{
+						...publishData
+					},
+					success: (res) => {
+						if(res.data.code === 200){
+							this.$refs.uToast.show({
+								type: 'success',
+								message: '评论成功,待管理员评审通过~',
+								icon:false
+							})
+							this.getCommentList()
+						}else if(res.data.code === 401){
+							this.$refs.uToast.show({
+								type: 'error',
+								message: res.data.message,
+								icon:false
+							},)
+							setTimeout(()=>{
+								uni.redirectTo({
+									url:'/pages/login/login'
+								})
+							},2000)
+						}else{
+							this.$refs.uToast.show({
+								type: 'error',
+								message: res.data.message,
+								icon:false
+							},)
+						}
+					},
+					fail: (err) => {
+						console.log('err',err);
+					}
+				})
+			},
+			isSupport(userArray){
+				const index = userArray.findIndex(item => item === this.userId)
+				if(index === -1){
+					return false
+				}else{
+					return true
+				}
 			}
 		},
 		onLoad(query){
 			const { articleId } = query
 			this.articleId = articleId
+			this.userId = JSON.parse(uni.getStorageSync('userId'))
 			this.getArticleDetail()
+			this.getCommentList()
 		},
 	}
 </script>
@@ -200,7 +458,7 @@
 		background-color: #f0f0f0;
 		height: calc(100vh - 100px);
 		box-sizing: border-box;
-		padding: 0 20rpx 0 20rpx;
+		padding: 0 20rpx;
 		.article_title{
 			font-weight: 700;
 			font-size: 35rpx;
@@ -237,6 +495,7 @@
 				}
 			}
 			.comment_List{
+				padding-bottom: 40rpx;
 				.comment_item{
 					margin-top: 50rpx;
 					display: flex;

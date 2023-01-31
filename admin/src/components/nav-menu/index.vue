@@ -89,6 +89,10 @@ const getMenuName = (name:string) =>{
       str = '视频管理'
       icon = 'VideoPlay'
       break;
+    case 'order':
+      str = '订单管理'
+      icon = 'Document'
+      break;
   }
   return {
     str,

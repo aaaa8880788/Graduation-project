@@ -179,8 +179,19 @@ const routes = function(app){
   app.post("/admin/api/updateComment",controller.updateComment)
   // 评论查询
   app.get("/admin/api/findComments",controller.findComments)
+  // 评论查询通过id
+  app.get("/admin/api/findCommentById",controller.findCommentById)
   // 评论删除
   app.delete("/admin/api/deleteComment",controller.deleteComment)
+
+  // 订单修改
+  app.post("/admin/api/updateOrder",controller.updateOrder)
+  // 订单查询
+  app.get("/admin/api/findOrders",controller.findOrders)
+  // 订单查询通过id
+  app.get("/admin/api/findOrderById",controller.findOrderById)
+  // 订单删除
+  app.delete("/admin/api/deleteOrder",controller.deleteOrder)
 
   // 图片上传接口部分
   app.post("/admin/api/upload/avatar",controller.uploadAvatarSingle("file"),controller.uploadAvatar);

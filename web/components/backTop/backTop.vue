@@ -5,6 +5,7 @@
 		@click="backTopClickHandle">
 		<u-icon 
 			name="arrow-up"
+			color="#fff"
 			></u-icon>
 	</view>
 </template>
@@ -37,8 +38,8 @@
 	top: 70%;
 	right: 30rpx;
 	z-index: 999;
-	width: 100rpx;
-	height: 100rpx;
+	width: 80rpx;
+	height: 80rpx;
 	display: flex;
 	align-items: center;
 	justify-content: center;

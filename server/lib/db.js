@@ -469,6 +469,24 @@ const powerData = [
     powerName: "find",
     moment:new Date().getTime()
   },
+  {
+    name: "order",
+    type: 1,
+    powerName: "find",
+    moment:new Date().getTime()
+  },
+  {
+    name: "order",
+    type: 1,
+    powerName: "modify",
+    moment:new Date().getTime()
+  },
+  {
+    name: "order",
+    type: 1,
+    powerName: "delete",
+    moment:new Date().getTime()
+  },
   /*
     *
     * 前台部分
@@ -658,13 +676,15 @@ let comments = `create table if not exists comments(
 )`
 
 // TODO
-// 反馈列表
-let feedbacks = `create table if not exists feedbacks(
+// 订单列表
+let orders = `create table if not exists orders(
   id INT NOT NULL AUTO_INCREMENT,
-  commentId INT NOT NULL COMMENT '评论id',
-  userId VARCHAR(1000) NOT NULL COMMENT '评论反馈者数组id',
-  type INT NOT NULL COMMENT '0喜欢1不喜欢',
-  moment varchar(100) NOT NULL COMMENT '反馈时间',
+  userId INT NOT NULL COMMENT '兑换用户id',
+  giftId INT NOT NULL COMMENT '兑换商品Id',
+  score INT NOT NULL COMMENT '订单金额',
+  status INT NOT NULL COMMENT '0未发货1已发货',
+  address varchar(1000) NOT NULL COMMENT '订单地址',
+  moment varchar(1000) NOT NULL COMMENT '订单时间',
   PRIMARY KEY (id) 
 )`
 
@@ -694,6 +714,7 @@ async function create(){
   createTable(practices)
   createTable(gifts)
   createTable(comments)
+  createTable(orders)
 
   // 初始化权限数据
   for(let i = 0; i<powerData.length; i++){
@@ -1758,7 +1779,7 @@ exports.addComment = (type,value) => {
 // 评论修改
 exports.updateComment= (type,value) => {
   if(type === 1){
-    const _sql = "UPDATE comments set content=?,commentType=?,userId=?,fatherId=?,status=?,moment=? where id=?"
+    const _sql = "UPDATE comments set content=?,commentType=?,userId=?,fatherId=?,status=?,supportUser=?,moment=? where id=?"
     return query(_sql,value)
   }else if (type === 2){
     const _sql = "select count(*) as count from comments where id=?"
@@ -1770,9 +1791,39 @@ exports.updateComment= (type,value) => {
 }
 
 // 评论查询
-exports.findComments = (page,pageSize) => {
-  const _sql = `select * from comments order by id desc limit ${(page-1)*pageSize},${page*pageSize}`
-  return query(_sql)
+exports.findComments = (type,value) => {
+  if(type === 1){
+    const [page,pageSize,commentType,status,moment] = value
+    const newArr = [{commentType},{status},{moment}].filter(item=>{
+      for(const key in item){
+        return item[key] !== null
+      }
+    })
+    const whereStr = utils.generateWhere(newArr)
+    const _sql = `select * from comments ${whereStr} order by id desc limit ${(page-1)*pageSize},${page*pageSize}`
+    return query(_sql)
+  }else if (type === 2){
+    const [commentType,status,moment] = value
+    const newArr = [{commentType},{status},{moment}].filter(item=>{
+      for(const key in item){
+        return item[key] !== null
+      }
+    })
+    const whereStr = utils.generateWhere(newArr)
+    const _sql = `select * from comments ${whereStr}`
+    return query(_sql)
+  }
+}
+
+// 评论查询通过id
+exports.findCommentById = (type,id) => {
+  if(type === 1){
+    const _sql = `select * from comments where id="${id}"`
+    return query(_sql)
+  }else if(type ===2){
+    const _sql = `select count(*) as count from comments where id="${id}"`
+    return query(_sql)
+  }
 }
 
 // 评论删除
@@ -1782,6 +1833,73 @@ exports.deleteComment = (type,id) => {
     return query(_sql)
   }else if(type === 2){
     const _sql = `select count(*) as count from comments where id="${id}"`
+    return query(_sql)
+  }
+}
+
+// 订单编辑
+exports.updateOrder= (type,value) => {
+  if(type === 1){
+    const _sql = "UPDATE orders set status=? where id=?"
+    return query(_sql,value)
+  }else if (type === 2){
+    const _sql = "select count(*) as count from orders where id=?"
+    return query(_sql,value)
+  }else if (type ===3){
+    const _sql = "select * from orders where id=?"
+    return query(_sql,value)
+  }
+}
+
+// 订单查询
+exports.findOrders = (type,value) => {
+  if(type === 1){
+    const [page,pageSize,status,moment] = value
+    const newArr = [{status},{moment}].filter(item=>{
+      for(const key in item){
+        return item[key] !== null
+      }
+    })
+    const whereStr = utils.generateWhere(newArr)
+    const _sql = `select * from orders ${whereStr} order by id desc limit ${(page-1)*pageSize},${page*pageSize}`
+    return query(_sql)
+  }else if (type === 2){
+    const [status,moment] = value
+    const newArr = [{status},{moment}].filter(item=>{
+      for(const key in item){
+        return item[key] !== null
+      }
+    })
+    const whereStr = utils.generateWhere(newArr)
+    const _sql = `select * from orders ${whereStr}`
+    return query(_sql)
+  }else if(type === 3){
+    const _sql = `select * from gifts where id=?`
+    return query(_sql,value)
+  }else if(type === 4){
+    const _sql = `select * from users where id=?`
+    return query(_sql,value)
+  }
+}
+
+// 订单查询通过id
+exports.findOrderById = (type,id) => {
+  if(type === 1){
+    const _sql = `select * from orders where id="${id}"`
+    return query(_sql)
+  }else if(type ===2){
+    const _sql = `select count(*) as count from orders where id="${id}"`
+    return query(_sql)
+  }
+}
+
+// 订单删除
+exports.deleteOrder = (type,id) => {
+  if(type === 1){
+    const _sql = `delete from orders where id="${id}"`
+    return query(_sql)
+  }else if(type === 2){
+    const _sql = `select count(*) as count from orders where id="${id}"`
     return query(_sql)
   }
 }
@@ -1858,10 +1976,33 @@ exports.getArticleDetail = (type,id) => {
   }
 }
 
+// 前台获取视频详情
+exports.getVedioDetail = (type,id) => {
+  if(type === 1){
+    const _sql = `select * from vedioes where id="${id}"`
+    return query(_sql)
+  }else if(type ===2){
+    const _sql = `select count(*) as count from vedioes where id="${id}"`
+    return query(_sql)
+  }
+}
+
 // 前台获取个人信息
 exports.getUserInfo = async (type,value) => {
   if(type === 1){
     const _sql = `select * from users where id=?`
+    return query(_sql,value)
+  }else if(type === 2){
+    const _sql = `select * from classes where id=?`
+    return query(_sql,value)
+  }else if(type === 3){
+    const _sql = `select * from faculties where id=?`
+    return query(_sql,value)
+  }else if(type === 4){
+    const _sql = `select * from organizations where id=?`
+    return query(_sql,value)
+  }else if(type === 5){
+    const _sql = `select * from schools where id=?`
     return query(_sql,value)
   }
 }
@@ -1871,3 +2012,141 @@ exports.getVedioesList = async () => {
   const _sql = `select * from vedioes`
   return query(_sql)
 }
+
+// 前台获取具体文章或视频列表评论列表接口
+exports.getCommentList = (type,value) => {
+  if(type === 1){
+    const _sql = `select * from comments where fatherId=?`
+    return query(_sql,value)
+  }else if(type === 2){
+    const _sql = `select * from articles where id=?`
+    return query(_sql,value)
+  }else if(type === 3){
+    const _sql = `select * from users where id=?`
+    return query(_sql,value)
+  }
+}
+
+// 前台发布评论接口
+exports.publishComment = (type,value) => {
+  if(type === 1){
+    const _sql = "insert into comments set content=?,commentType=?,userId=?,fatherId=?,status=?,supportUser=?,moment=?"
+    return query(_sql,value)
+  }
+}
+
+
+// 前台评论点赞
+exports.supportComment = (type,value) => {
+  if(type === 1){
+    const _sql = `select * from comments where id=?`
+    return query(_sql,value)
+  }else if(type ===2){
+    const _sql = "UPDATE comments set supportUser=? where id=?"
+    return query(_sql,value)
+  }
+}
+
+// 前台文章/视频/活动收藏
+exports.userCollect = (type,value) => {
+  const sql = {
+    0: {
+      select:`select * from articles where id=?`,
+      update:`UPDATE articles set supportUser=? where id=?`
+    },
+    1: {
+      select:`select * from vedioes where id=?`,
+      update:`UPDATE vedioes set supportUser=? where id=?`
+    },
+    2: {
+      select:`select * from actives where id=?`,
+      update:`UPDATE actives set supportUser=? where id=?`
+    }
+  }
+  const _sql = sql[type[0]][type[1]]
+  return query(_sql,value)
+}
+
+// 前台获取题目列表
+exports.getPracticeList = async () => {
+  const _sql = `select * from practices`
+  return query(_sql)
+}
+
+// 前台用户数据更新接口
+exports.updateUserInfo = async(type,value) => {
+  if(type === 1){
+    const _sql = "UPDATE users set name=?,password=?,avatar=?,phone=?,score=?,address=?,signMoment=?,sex=?,birthday=? where id=?"
+    return query(_sql,value)
+  }else if (type ===2){
+    const _sql = "select * from users where id=?"
+    return query(_sql,value)
+  }
+}
+
+// 前台获取收藏文章列表
+exports.getLoveArticleList = async () => {
+  const _sql = `select * from articles`
+  return query(_sql)
+}
+
+// 前台获取收藏视频列表
+exports.getLoveVedioList = async () => {
+  const _sql = `select * from vedioes`
+  return query(_sql)
+}
+
+// 前台获取评论列表
+exports.getCommentList = async (value) => {
+  const _sql = `select * from comments where userId=?`
+  return query(_sql,value)
+}
+
+// 前台获取商品列表
+exports.getGoodList = async () => {
+  const _sql = `select * from gifts`
+  return query(_sql)
+}
+
+// 前台生成订单
+exports.addOrder = (type,value) => {
+  if(type === 1){
+    const _sql = "insert into orders set userId=?,giftId=?,score=?,status=?,address=?,moment=?"
+    return query(_sql,value)
+  }else if(type === 2){
+    const _sql = "select * from users where id=?"
+    return query(_sql,value)
+  }else if(type ===3){
+    const _sql = "UPDATE users set score=? where id=?"
+    return query(_sql,value)
+  }else if(type ===4){
+    const _sql = "select * from gifts where id=?"
+    return query(_sql,value)
+  }else if(type ===5){
+    const _sql = "UPDATE gifts set total=? where id=?"
+    return query(_sql,value)
+  }
+}
+
+// 前台获取订单列表
+exports.getOrderList = async(type,value) => {
+  if(type === 1){
+    const _sql = `select * from orders`
+    return query(_sql)
+  }else if(type === 2){
+    const _sql = `select * from gifts where id=?`
+    return query(_sql,value)
+  }else if(type === 3){
+    const _sql = `select * from users where id=?`
+    return query(_sql,value)
+  }
+}
+
+// 前台删除订单
+exports.deleteOrder = async(type,value) => {
+  if(type === 1){
+    const _sql = `delete from orders where id=?`
+    return query(_sql,value)
+  }
+}
+

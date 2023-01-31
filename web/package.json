@@ -1,5 +1,13 @@
 {
-	"dependencies": {
-		"dayjs": "^1.11.7"
-	}
+    "id": "xiao-video-component",
+    "name": "视频播放器组件",
+    "version": "1.0.0",
+    "description": "基于uniapp小程序视频播放器组件",
+    "keywords": [
+        "视频",
+        "播放器",
+        "video",
+        "player",
+        "uniapp"
+    ]
 }
