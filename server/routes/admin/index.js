@@ -60,7 +60,7 @@ const routes = function(app){
   // 组织查询通过id
   app.get("/admin/api/findOrganizationById",controller.findOrganizationById)
   // 组织删除
-  app.delete("/admin/api/findOrganizationById",controller.findOrganizationById)
+  app.delete("/admin/api/deleteOrganization",controller.deleteOrganization)
 
   // 学院添加
   app.post("/admin/api/addFaculty",controller.addFaculty)

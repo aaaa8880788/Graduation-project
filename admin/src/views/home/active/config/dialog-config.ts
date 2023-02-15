@@ -42,6 +42,22 @@ const addDialogConfig: IForm = {
       },
     },
     {
+      field: 'startTime',
+      type: 'datepicker',
+      label: '活动开始时间',
+      otherOptions: {
+        type: 'datetime'
+      }
+    },
+    {
+      field: 'endTime',
+      type: 'datepicker',
+      label: '活动结束时间',
+      otherOptions: {
+        type: 'datetime'
+      }
+    },
+    {
       field: 'userId',
       type: 'select',
       label: '活动举办人',
@@ -67,7 +83,7 @@ const addDialogConfig: IForm = {
     },
     {
       field: "body",
-      type: "quillEditor",
+      type: "input",
       label: "活动内容",
       placeholder: "请输入活动内容",
       rules: [
@@ -78,12 +94,11 @@ const addDialogConfig: IForm = {
         }
       ],
       otherOptions:{
-        contentType:'html',
-        action: import.meta.env.VITE_APP_IMAGE_URL,
-        headers: {
-          Authorization: localCache.getCache("token") || "",
-        },
-      },
+        type:'textarea',
+        autosize:{ 
+          minRows: 3
+        }
+      }
     }
   ],
   labelWidth: "160px",
@@ -118,6 +133,22 @@ const editDialogConfig: IForm = {
       ],
     },
     {
+      field: 'startTime',
+      type: 'datepicker',
+      label: '活动开始时间',
+      otherOptions: {
+        type: 'datetime'
+      }
+    },
+    {
+      field: 'endTime',
+      type: 'datepicker',
+      label: '活动结束时间',
+      otherOptions: {
+        type: 'datetime'
+      }
+    },
+    {
       field: "placeVolume",
       type: "number",
       label: "活动最多参与人数",
@@ -154,7 +185,7 @@ const editDialogConfig: IForm = {
     },
     {
       field: "body",
-      type: "quillEditor",
+      type: "input",
       label: "活动内容",
       placeholder: "请输入活动内容",
       rules: [
@@ -165,12 +196,11 @@ const editDialogConfig: IForm = {
         }
       ],
       otherOptions:{
-        contentType:'html',
-        action: import.meta.env.VITE_APP_IMAGE_URL,
-        headers: {
-          Authorization: localCache.getCache("token") || "",
-        },
-      },
+        type:'textarea',
+        autosize:{ 
+          minRows: 3
+        }
+      }
     }
   ],
   labelWidth: "160px",
@@ -192,6 +222,24 @@ const detailDialogConfig: IForm = {
       ],
       otherOptions: {
         disabled: true
+      }
+    },
+    {
+      field: 'startTime',
+      type: 'datepicker',
+      label: '活动开始时间',
+      otherOptions: {
+        type: 'datetime',
+        disabled:true
+      }
+    },
+    {
+      field: 'endTime',
+      type: 'datepicker',
+      label: '活动结束时间',
+      otherOptions: {
+        type: 'datetime',
+        disabled:true
       }
     },
     {
@@ -252,7 +300,7 @@ const detailDialogConfig: IForm = {
     },
     {
       field: "body",
-      type: "quillEditor",
+      type: "input",
       label: "活动内容",
       placeholder: "请输入活动内容",
       rules: [
@@ -263,14 +311,26 @@ const detailDialogConfig: IForm = {
         }
       ],
       otherOptions:{
-        contentType:'html',
-        action: import.meta.env.VITE_APP_IMAGE_URL,
-        headers: {
-          Authorization: localCache.getCache("token") || "",
+        type:'textarea',
+        autosize:{ 
+          minRows: 3
         },
-        readOnly: true
-      },
-    }
+        disabled: true
+      }
+    },
+    {
+      field: "joinUserData",
+      type: "input",
+      label: "已报名",
+      placeholder: "暂无人报名",
+      otherOptions: {
+        type:'textarea',
+        autosize:{ 
+          minRows: 3
+        },
+        disabled: true
+      }
+    },
   ],
   labelWidth: "160px",
 };

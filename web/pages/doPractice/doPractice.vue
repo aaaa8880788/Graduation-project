@@ -122,7 +122,8 @@
 			</view>
 			<view
 				v-if="isAnswerError"
-				class="practice_item">
+				class="practice_item"
+				style="margin-top: 20rpx;">
 				<view class="practice_header">
 					<view class="practice_header_left">
 						<text>答案解析</text>

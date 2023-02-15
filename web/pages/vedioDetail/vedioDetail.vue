@@ -3,7 +3,16 @@
 		<view class="vedio_nav">
 			<uni-nav-bar 
 				v-bind="navBar"
-				@clickLeft="navLeftHandle"/>
+				@clickLeft="navLeftHandle">
+				<template #right="scoped">
+					<countDown
+						ref="countDown"
+						:time="countDownTime"
+						@timeover="timeoverHandle"
+						@remainderChange="remainderChangeHandle">
+					</countDown>
+				</template>
+			</uni-nav-bar>	
 		</view>
 		<xiao-video-component :src="vedioData.vedio"></xiao-video-component>
 		<scroll-view 
@@ -117,6 +126,18 @@
 		</publishComment>
 		<!-- 提示组件 -->
 		<u-toast ref="uToast"></u-toast>
+		<uni-popup
+			ref="tipDialogRef" 
+			type="dialog">
+			<uni-popup-dialog 
+				:message="popupDialog.message" 
+				:duration="popupDialog.duration" 
+				:content="popupDialog.content"
+				:before-close="popupDialog.beforeClose" 
+				@close="dialogCloseHandle" 
+				@confirm="dialogConfirmHandle">
+			</uni-popup-dialog>
+		</uni-popup>
 	</view>
 </template>
 
@@ -133,6 +154,14 @@
 					height:'100rpx',
 					backgroundColor:'#eb5544',
 					color:'#fff'
+				},
+				countDownTime: 1000 * 59,
+				remainder:0,
+				popupDialog:{
+					type:'success',
+					content:"默认信息",
+					duration:2000,
+					beforeClose:true
 				},
 				vedioData:{
 					supportUser:[]
@@ -167,9 +196,66 @@
 			}
 		},
 		methods:{
+			// 计时结束处理函数
+			timeoverHandle(){
+				uni.request({
+					url: `http://localhost:3000/web/api/updateUserInfo?id=${this.userId}`,
+					method: 'POST',
+					header:{
+						Authorization:uni.getStorageSync('token') ? JSON.parse(uni.getStorageSync('token')) : ''
+					},
+					data:{
+						score: 1
+					},
+					success: (res) => {
+						if(res.data.code === 200){
+							this.$refs.uToast.show({
+								type: 'success',
+								message: '积分获取成功~',
+								icon:false
+							})
+						}else if(res.data.code === 401){
+							this.$refs.uToast.show({
+								type: 'error',
+								message: res.data.message,
+								icon:false
+							},)
+							setTimeout(()=>{
+								uni.redirectTo({
+									url:'/pages/login/login'
+								})
+							},2000)
+						}else{
+							this.$refs.uToast.show({
+								type: 'error',
+								message: res.data.message,
+								icon:false
+							},)
+						}
+					},
+					fail: (err) => {
+						console.log('err',err);
+					}
+				})
+				this.$refs.countDown.reset()
+			},
+			remainderChangeHandle(remainder){
+				this.remainder = remainder
+			},
+			// 计时后对话框关闭
+			dialogCloseHandle(){
+				this.$refs.countDown.start()
+				this.$refs.tipDialogRef.close()
+			},
+			// 计时后对话框确定
+			dialogConfirmHandle(){
+				uni.navigateBack()
+			},
 			// 导航栏左侧按钮点击触发
 			navLeftHandle(){
-				uni.navigateBack()
+				this.$refs.countDown.pause()
+				this.popupDialog.content = `${this.remainder}秒后将会奖励1积分，是否确定退出？`
+				this.$refs.tipDialogRef.open()
 			},
 			isSupport(userArray){
 				const index = userArray.findIndex(item => item === this.userId)

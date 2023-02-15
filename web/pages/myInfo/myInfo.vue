@@ -206,6 +206,7 @@
 			</u-button>
 		</view>
 		<!-- 提示组件 -->
+		<u-toast ref="uToast"></u-toast>
 		<uni-popup
 			ref="tipDialogRef" 
 			type="dialog">
@@ -298,7 +299,6 @@
 					success: (res) => {
 						if(res.data.code === 200){
 							this.myInfoData = res.data.data
-							console.log('myInfoData---',this.myInfoData);
 						}else if(res.data.code === 401){
 							this.$refs.uToast.show({
 								type: 'error',
@@ -325,11 +325,9 @@
 			},
 			// 对话框关闭按钮点击触发
 			dialogCloseHandle(){
-				console.log('点击了关闭');
 				this.$refs.tipDialogRef.close()
 			},
 			dialogConfirmHandle(){
-				console.log('点击了确定');
 				this.$refs.tipDialogRef.close()
 			},
 			sexSelect(e) {

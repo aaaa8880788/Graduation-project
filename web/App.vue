@@ -18,6 +18,8 @@
 	@import "@/uni_modules/uview-ui/index.scss";
 	/*每个页面公共css */
 	@import 'common/css/animate.min.css';
+	// 引入icon
+	@import 'common/css/iconfont.css';
 	@import '@/uni_modules/uni-scss/index.scss';
 	/* #ifndef APP-NVUE */
 	@import '@/static/customicons.css';

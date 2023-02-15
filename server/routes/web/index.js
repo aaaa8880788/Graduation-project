@@ -59,6 +59,36 @@ const routes = function(app){
   app.get("/web/api/getOrderList",controller.getOrderList)
   // 前台获取订单列表
   app.delete("/web/api/deleteOrder",controller.deleteOrder)
+  // 前台获取活动地点
+  app.get("/web/api/getPlaceList",controller.getPlaceList)
+  // 前台发布活动
+  app.post("/web/api/publishActive",controller.publishActive)
+  // 前台获取活动列表
+  app.get("/web/api/getActiveList",controller.getActiveList)
+  // 前台获取文章详情
+  app.get("/web/api/getActiveDetail",controller.getActiveDetail)
+  // 前台用户参与活动
+  app.post("/web/api/joinActive",controller.joinActive)
+  // 前台获取用户参与活动
+  app.get("/web/api/getUserJoinActive",controller.getUserJoinActive)
+  // 前台搜索文章或视频列表
+  app.get("/web/api/getSearchList",controller.getSearchList)
+  // 前台获取通讯录好友列表
+  app.get("/web/api/getFriendList",controller.getFriendList)
+  // 前台获取通讯录群列表
+  app.get("/web/api/getGroupList",controller.getGroupList)
+  // 前台创建消息列表
+  app.post("/web/api/addChatMessage",controller.addChatMessage)
+  // 前台用户获取消息列表
+  app.get("/web/api/getChatMessage",controller.getChatMessage)
+  // 前台用户获取好友聊天信息
+  app.get("/web/api/getMessageInfo",controller.getMessageInfo)
+  // 前台用户获取群信息
+  app.get("/web/api/getGroupMessageInfo",controller.getGroupMessageInfo)
+  // 前台用户发送信息
+  app.post("/web/api/sendMessage",controller.sendMessage)
+  // 前台用户发送群信息
+  app.post("/web/api/sendGroupMessage",controller.sendGroupMessage)
 }
 
 module.exports = routes

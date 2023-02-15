@@ -1,7 +1,7 @@
 <template>
 	<view class="vedio">
 		<!-- 导航栏 -->
-		<navBar></navBar>
+		<navBar @searchClick="searchClickHandle"></navBar>
 		<navTop 
 			:navData="navData"
 			@itemChange="itemChangeHandle">
@@ -69,6 +69,11 @@
 		methods:{
 			itemChangeHandle(index,item){
 				this.currentActive = item
+			},
+			searchClickHandle(){
+				uni.navigateTo({
+					url:'/pages/vedioSearch/vedioSearch'
+				})
 			},
 			transformDate(date,format){
 				return formateUtcString(date,format)

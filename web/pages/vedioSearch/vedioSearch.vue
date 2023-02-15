@@ -1,11 +1,16 @@
 <template>
-	<view class="love_vedio">
-		<view class="love_article_nav">
-			<uni-nav-bar 
-				v-bind="navBar"
-				@clickLeft="navLeftHandle"/>
-		</view>
+	<view class="article_search">
+		<uni-search-bar 
+			:focus="true" 
+			v-model="searchValue"
+			bgColor="#e2e2e2"
+			radius="30"
+			@confirm="confirm" 
+			@cancel="cancel">
+		</uni-search-bar>
+		<!-- 视频列表 -->
 		<scroll-view
+			v-if="vedioList.length"
 			class="vedio_list" 
 			scroll-y="true" >
 			<view 
@@ -40,6 +45,11 @@
 				</view>
 			</view>
 		</scroll-view>
+		<u-empty
+			v-else
+		  mode="search"
+		  icon="http://cdn.uviewui.com/uview/empty/car.png">
+		</u-empty>
 		<!-- 提示组件 -->
 		<u-toast ref="uToast"></u-toast>
 	</view>
@@ -50,29 +60,19 @@
 	export default {
 		data() {
 			return {
-				navBar:{
-					shadow:true,
-					leftIcon:'left',
-					leftText:'返回',
-					title:'收藏的视频',
-					height:'100rpx',
-					backgroundColor:'#eb5544',
-					color:'#fff'
-				},
-				vedioList:[],
-				userId:''
+				searchValue:'',
+				vedioList:[]
 			};
 		},
-		methods: {
-			// 导航栏左侧按钮点击触发
-			navLeftHandle(){
-				uni.navigateBack()
-			},
-			// 获取收藏文章列表
-			getLoveVedioList(){
+		methods:{
+			confirm({value}){
 				uni.request({
-					url: `http://localhost:3000/web/api/getLoveVedioList?id=${this.userId}`,
+					url: `http://localhost:3000/web/api/getSearchList`,
 					method: 'GET',
+					data:{
+						title:value,
+						type:1
+					},
 					header:{
 						Authorization:uni.getStorageSync('token') ? JSON.parse(uni.getStorageSync('token')) : ''
 					},
@@ -104,33 +104,31 @@
 					}
 				})
 			},
+			cancel(){
+				uni.navigateBack()
+			},
 			transformDate(date,format){
 				return formateUtcString(date,format)
 			},
+			// 视频点击触发
 			vedioClickHandle(item){
 				uni.navigateTo({
-					url:`/pages/vedioDetail/vedioDetail?vedioId=${item.id}`
+					url:`/pages/vedioDetail/vedioDetail?vedioId=${item.id}`,
 				})
 			}
-		},
-		onLoad() {
-			this.userId = uni.getStorageSync('userId')
-		},
-		onShow(){
-			this.getLoveVedioList()
 		}
 	}
 </script>
 
-<style lang="less">
-.love_vedio{
-	height: 100vh;
+<style lang="less" scoped>
+.article_search{
 	width: 100vw;
+	height: 100vh;
+	background-color: #fff;
 	.vedio_list{
-		height: calc(100vh - 102rpx);
+		height: calc(100vh - 56px);
 		box-sizing: border-box;
 		.vedio_item{
-			border-bottom: 1px solid #ccc;
 			.vedio_image{
 				width: 100%;
 				height: 400rpx;

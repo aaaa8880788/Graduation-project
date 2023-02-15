@@ -9,7 +9,8 @@ const multer = require("multer");
 // 导入路径
 const path = require("path");
 // 导入工具函数
-const utils = require('../utils/utils')
+const utils = require('../utils/utils');
+const e = require('express');
 
 // 后台接口部分
 // 传统接口部分
@@ -1051,6 +1052,36 @@ exports.addUser = async (req,res) => {
   // 进行密码加密
   const newPassword = bcrypt.hashSync(password, 10);
   const result = await dbModel.addUser(1,[type,name,newPassword,avatar,powerId,organizationId,facultyId,schoolId,classId,className,cardId,phone,score,address,moment])
+  // 注册成功后添加群用户表数据
+  // 1.找到该注册用户的信息
+  const userData = (await dbModel.addUser(4,[cardId]))[0]
+  // 2.找到群聊大厅的id
+  const groupData = (await dbModel.addUser(5,['群聊大厅']))[0]
+  // 3.添加群用户表
+  {
+    const groupId = groupData.id
+    const userId = userData.id
+    const name = userData.name
+    const tip = 0
+    const shield = 0
+    const moment = new Date()
+    await dbModel.addUser(6,[groupId,userId,name,tip,shield,moment])
+  }
+  // 注册成功后添加好友表
+  // 1.搜索出全部用户的数据
+  const userList = await dbModel.addUser(7)
+  if(userList.length){
+    for(const user of userList){
+      const status = 0
+      const moment = new Date()
+      if(userData.id != user.id){
+        await dbModel.addUser(8,[userData.id,user.id,status,moment])
+        await dbModel.addUser(8,[user.id,userData.id,status,moment])
+      }else{
+        await dbModel.addUser(8,[userData.id,user.id,status,moment])
+      }
+    }
+  }
   res.send({
     code:200,
     message:'添加成功'
@@ -1468,13 +1499,13 @@ exports.deleteVedio = async (req,res) => {
 // 活动添加
 exports.addActive = async (req,res) => {
   const data = req.body
-  let {name,placeId,body,userId,score} = data
+  let {name,placeId,body,userId,score,startTime,endTime} = data
   if (!name) {
     return res.send({
       message: "name字段（活动名称）必传",
     });
   }
-  if (!placeId) {
+  if (!['number'].includes(typeof Number(placeId))) {
     return res.send({
       message: "placeId字段（活动地点）必传",
     });
@@ -1484,14 +1515,24 @@ exports.addActive = async (req,res) => {
       message: "body字段（活动内容）必传",
     });
   }
-  if (!userId) {
+  if (!['number'].includes(typeof Number(userId))) {
     return res.send({
       message: "userId字段（活动发起人id）必传",
     });
   }
-  if(!['number'].includes(typeof score)){
+  if(!['number'].includes(typeof Number(score))){
     return res.send({
       message: "活动积分必传",
+    });
+  }
+  if(!startTime){
+    return res.send({
+      message: "活动开始时间必传",
+    });
+  }
+  if(!endTime){
+    return res.send({
+      message: "活动开始时间必传",
     });
   }
   const supportUser = JSON.stringify([])
@@ -1504,7 +1545,7 @@ exports.addActive = async (req,res) => {
         message:"数据已存在，请重新选择"
       })
   }
-  const result = await dbModel.addActive(1,[name,placeId,body,userId,supportUser,joinUser,score,isPass,moment])
+  const result = await dbModel.addActive(1,[name,placeId,body,userId,supportUser,joinUser,score,isPass,startTime,endTime,moment])
   res.send({
     code:200,
     message:'添加成功'
@@ -1515,7 +1556,7 @@ exports.addActive = async (req,res) => {
 exports.updateActive = async (req,res) => {
   const data = req.body
   const params = req.query
-  let {name,placeId,body,userId,supportUser,joinUser,score,isPass} = data
+  let {name,placeId,body,userId,supportUser,joinUser,score,isPass,startTime,endTime} = data
   let {id} = params
   if([null,undefined].includes(id) || !['number','string'].includes(typeof id)){
     return res.send({
@@ -1545,7 +1586,9 @@ exports.updateActive = async (req,res) => {
   }
   score = score ?? originData[0].score
   isPass = isPass ?? originData[0].isPass
-  const result = await dbModel.updateActive(1,[name,placeId,body,userId,supportUser,joinUser,score,isPass,id])
+  startTime = startTime ?? originData[0].startTime
+  endTime = endTime ?? originData[0].endTime
+  const result = await dbModel.updateActive(1,[name,placeId,body,userId,supportUser,joinUser,score,isPass,startTime,endTime,id])
   res.send({
     code:200,
     message:'修改成功'
@@ -1593,10 +1636,16 @@ exports.findActiveById = async(req,res) => {
     })
   }
   const result = await dbModel.findActiveById(1,id)
-  result.forEach(item=>{
+  for(const item of result){
     item.supportUser = JSON.parse(item.supportUser)
     item.joinUser = JSON.parse(item.joinUser)
-  })
+    const joinUserData = []
+    for(const user of item.joinUser){
+      const userName = (await dbModel.findUserById(1,user))[0].name
+      joinUserData.push(userName)
+    }
+    item.joinUserData = joinUserData.join('、')
+  }
   res.send({
     code:200,
     message:"查询成功",
@@ -2502,6 +2551,44 @@ exports.userRegister = async (req,res) => {
   // 进行密码加密
   const newPassword = bcrypt.hashSync(password, 10);
   const result = await dbModel.userRegister(1,[type,name,newPassword,avatar,powerId,organizationId,facultyId,schoolId,classId,className,cardId,phone,score,address,moment])
+  // 注册成功后添加群用户表数据
+  // 1.找到该注册用户的信息
+  const userData = (await dbModel.userRegister(4,[cardId]))[0]
+  // 2.找到群聊大厅的id
+  const groupData = (await dbModel.userRegister(5,['群聊大厅']))[0]
+  // 3.添加群用户表
+  {
+    const groupId = groupData.id
+    const userId = userData.id
+    const name = userData.name
+    const tip = 0
+    const shield = 0
+    const moment = new Date()
+    await dbModel.userRegister(6,[groupId,userId,name,tip,shield,moment])
+  }
+  // 注册成功后添加好友表
+  // 1.搜索出全部用户的数据
+  const userList = await dbModel.userRegister(7)
+  if(userList.length){
+    for(const user of userList){
+      const status = 0
+      const moment = new Date()
+      if(userData.id != user.id){
+        await dbModel.userRegister(8,[userData.id,user.id,status,moment])
+        await dbModel.userRegister(8,[user.id,userData.id,status,moment])
+      }else{
+        await dbModel.userRegister(8,[userData.id,user.id,status,moment])
+      }
+    }
+  }
+  // 注册成功后添加群信息表(群聊大厅)
+  {
+    const userId = userData.id
+    const targetId = groupData.id
+    const type = 0
+    const moment = new Date()
+    await dbModel.userRegister(9,[userId,targetId,type,moment])
+  }
   res.send({
     code:200,
     message:'注册成功'
@@ -2510,7 +2597,6 @@ exports.userRegister = async (req,res) => {
 
 // 前台登录接口
 exports.userLogin = async(req,res) => {
-  console.log('======');
   let { type, cardId, phone, password } = req.body;
   if(type === 'phone'){
     // 手机登录
@@ -2554,7 +2640,7 @@ exports.userLogin = async(req,res) => {
       });
     }
     // 校验密码
-    const data = await dbModel.userLogin(3,[cardId])
+    const data = await dbModel.userLogin(4,[cardId])
     const oldPassword = data[0]?.password
     const id = data[0].id
     const isValid = bcrypt.compareSync(password, oldPassword);
@@ -2571,7 +2657,8 @@ exports.userLogin = async(req,res) => {
     res.send({
       code: 200,
       message: "登录成功！",
-      token: tokenStr
+      token: tokenStr,
+      userId: id
     });
   }
 }
@@ -2930,7 +3017,11 @@ exports.updateUserInfo = async (req,res) => {
   avatar = avatar ?? originData[0].avatar
   phone = phone ?? originData[0].phone
   address = address ?? originData[0].address
-  score = score ?? originData[0].score
+  if(score){
+    score = originData[0].score + score
+  }else{
+    score = score ?? originData[0].score
+  }
   if(signMoment){
     const isToday = utils.confirmIsToday(originData[0].signMoment)
     if(isToday){
@@ -3108,5 +3199,416 @@ exports.deleteOrder = async(req,res) => {
     code:200,
     message:"订单删除成功~",
     data:result
+  })
+}
+
+// 前台获取活动地点
+exports.getPlaceList = async(req,res) => {
+  const result = await dbModel.getPlaceList(1)
+  res.send({
+    code:200,
+    message:"查询成功",
+    data:result
+  })
+}
+
+// 前台发布活动
+exports.publishActive = async(req,res) => {
+  const data = req.body
+  let { name,placeId,body,userId,score,startTime,endTime } = data
+  placeId = Number(placeId)
+  userId = Number(userId)
+  score = Number(score)
+  if(!name){
+    return res.send({
+      message:"活动名称不可为空~"
+    })
+  }
+  if(!body){
+    return res.send({
+      message:"活动内容不可为空~"
+    })
+  }
+  if(!startTime){
+    return res.send({
+      message:"活动开始时间不可为空~"
+    })
+  }
+  if(!endTime){
+    return res.send({
+      message:"活动结束时间不可为空~"
+    })
+  }
+  if(!['number'].includes(typeof placeId)){
+    return res.send({
+      message:"活动地点不可为空~"
+    })
+  }
+  if(!['number'].includes(typeof userId)){
+    return res.send({
+      message:"活动发布者不可为空~"
+    })
+  }
+  if(!['number'].includes(typeof score)){
+    return res.send({
+      message:"活动积分不可为空~"
+    })
+  }
+
+  let isPass = 1 
+  let moment = new Date()
+  let supportUser = JSON.stringify([])
+  let joinUser = JSON.stringify([])
+
+  // 前台发布活动
+  const result = await dbModel.publishActive(1,[name,placeId,body,userId,supportUser,joinUser,score,isPass,startTime,endTime,moment])
+  res.send({
+    code:200,
+    message:"发布活动成功~",
+  })
+}
+
+// 前台获取活动列表
+exports.getActiveList = async(req,res) => {
+  const result = await dbModel.getActiveList(1)
+  for(const item of result){
+    item.placeData = (await dbModel.getActiveList(2,[item.placeId]))[0]
+    item.userData = (await dbModel.getActiveList(3,[item.userId]))[0]
+    if(item.userData && item.userData.organizationId){
+      item.userData.organizationData = (await dbModel.getActiveList(4,[item.userData.organizationId]))[0]
+    }
+  }
+  res.send({
+    code:200,
+    message:"查询成功",
+    data:result
+  })
+}
+
+// 前台获取文章详情
+exports.getActiveDetail = async (req,res) => {
+  const params = req.query
+  let {id} = params
+  if(!['number','string'].includes(typeof Number(id))){
+    return res.send({
+      message:'请传入正确格式的id'
+    })
+  }
+  const count = await dbModel.getActiveDetail(2,[id])
+  if(!count[0].count){
+    return res.send({
+      message:"数据不存在，查询失败"
+    })
+  }
+  const result = await dbModel.getActiveDetail(1,[id])
+  for(const item of result){
+    item.joinUser = JSON.parse(item.joinUser)
+    item.supportUser = JSON.parse(item.supportUser)
+    item.placeData = (await dbModel.getActiveDetail(3,[item.placeId]))[0]
+    item.userData = (await dbModel.getActiveDetail(4,[item.userId]))[0]
+    if(item.userData && item.userData.organizationId){
+      item.userData.organizationData = (await dbModel.getActiveDetail(5,[item.userData.organizationId]))[0]
+    }
+  }
+  res.send({
+    code:200,
+    message:"查询成功",
+    data:result[0]
+  })
+}
+
+// 前台参与活动
+exports.joinActive = async (req,res) => {
+  const data = req.body
+  let { id,userId } = data
+  if(!['number'].includes(typeof Number(userId))){
+    return res.send({
+      message: "用户id不可为空~",
+    });
+  }
+  if(!['number'].includes(typeof Number(id))){
+    return res.send({
+      message: "活动id不可为空~",
+    });
+  }
+  const count = await dbModel.joinActive(1,[id])
+  if(!count[0].count){
+    return res.send({
+      message:"数据不存在，修改失败"
+    })
+  }
+  const originData = await dbModel.joinActive(2,[id])
+  let joinUser = JSON.parse(originData[0].joinUser)
+  const isJoin = joinUser.some(item => item === userId )
+  if(isJoin){
+    return res.send({
+      message:'你已经参与过了，不可重复参与'
+    })
+  }else{
+    joinUser.push(userId)
+  }
+  joinUser = JSON.stringify(joinUser)
+  const result = await dbModel.joinActive(3,[joinUser,id])
+  res.send({
+    code:200,
+    message:'活动参与成功~'
+  })
+}
+
+// 前台获取用户参与活动
+exports.getUserJoinActive = async(req,res) => {
+  const params = req.query
+  const { id } = params
+  const result = await dbModel.getUserJoinActive(1)
+  for(const item of result){
+    item.joinUser = JSON.parse(item.joinUser)
+    item.placeData = (await dbModel.getUserJoinActive(2,[item.placeId]))[0]
+  }
+  const joinActive = result.filter(item => item.joinUser.some(user => user == id))
+  res.send({
+    code:200,
+    message:"查询成功",
+    data:joinActive
+  })
+}
+
+// 前台搜索文章或视频列表
+exports.getSearchList = async(req,res) => {
+  const params = req.query
+  const { title,type } = params
+  let result
+  if(type == 0){
+    result = await dbModel.getSearchList(1,title)
+  }else{
+    result = await dbModel.getSearchList(2,title)
+  }
+  
+  res.send({
+    code:200,
+    message:"查询成功",
+    data:result
+  })
+}
+
+// 前台获取通讯录好友列表
+exports.getFriendList = async(req,res) => {
+  const params = req.query
+  const { id } = params
+  const result = await dbModel.getFriendList(1,[id])
+  for(const item of result){
+    item.userData = (await dbModel.getFriendList(2,[item.userId]))[0]
+    item.friendData = (await dbModel.getFriendList(2,[item.friendId]))[0]
+  }
+  res.send({
+    code:200,
+    message:"查询成功",
+    data:result
+  })
+}
+
+// 前台获取通讯录群列表
+exports.getGroupList = async(req,res) => {
+  const params = req.query
+  const { id } = params
+  // 1.找出当前用户的所有群数据
+  const result = await dbModel.getGroupList(1,[id])
+  let groupList = []
+  for(const item of result){
+    const groupData = (await dbModel.getGroupList(2,[item.groupId]))[0]
+    groupList.push(groupData)
+  }
+  for(const item of groupList){
+    const groupUserList = await dbModel.getGroupList(3,[item.id])
+    let userList = []
+    for(const groupUser of groupUserList){
+      const userData = (await dbModel.getGroupList(4,[groupUser.userId]))[0]
+      userList.push(userData)
+    }
+    item.userList = userList
+  }
+  res.send({
+    code:200,
+    message:"查询成功",
+    data:groupList
+  })
+}
+
+// 前台创建消息列表
+exports.addChatMessage = async(req,res) => {
+  const data = req.body
+  const { userId,targetId,type } = data
+  if(!['number'].includes(typeof Number(userId))){
+    return res.send({
+      message: "用户id不可为空~",
+    });
+  }
+  if(!['number'].includes(typeof Number(targetId))){
+    return res.send({
+      message: "目标id不可为空~",
+    });
+  }
+  if(!['number'].includes(typeof Number(type))){
+    return res.send({
+      message: "类型不可为空~",
+    });
+  }
+  // 1.先查询数据是否存在
+  const count = (await dbModel.addChatMessage(1,[userId,targetId,type]))[0]
+  if(!count.count){
+    // 2.数据不存在,创建聊天信息数据
+    let moment = new Date()
+    const result = await dbModel.addChatMessage(2,[userId,targetId,type,moment])
+    res.send({
+      code:200,
+      message:"创建成功",
+    })
+  }else{
+    res.send({
+      code:200,
+      message:"已存在,无需创建",
+    })
+  }
+}
+
+// 前台用户获取消息列表
+exports.getChatMessage = async(req,res) => {
+  const params = req.query
+  const { userId } = params
+  if(!['number'].includes(typeof Number(userId))){
+    return res.send({
+      message: "用户id不可为空~",
+    });
+  }
+  const result = await dbModel.getChatMessage(1,[userId])
+  for(const chat of result){
+    if(chat.type == 0){
+      // 群
+      chat.targetData = (await dbModel.getChatMessage(2,[chat.targetId]))[0]
+    }else{
+      // 好友
+      chat.targetData = (await dbModel.getChatMessage(3,[chat.targetId]))[0]
+      let result
+      if(userId != chat.targetId){
+        const userList = await dbModel.getMessageInfo(1,[userId,chat.targetId])
+        const friendList = await dbModel.getMessageInfo(1,[chat.targetId,userId])
+        result = [...userList,...friendList]
+      }else{
+        result = await dbModel.getMessageInfo(1,[userId,chat.targetId])
+      }
+      result.sort((a,b) => {
+        const timeA = new Date(a.moment)
+        const timeB = new Date(b.moment)
+        return timeB - timeA
+      })
+      chat.lastMessageData = result[0]
+    }
+  }
+  res.send({
+    code:200,
+    message:"查询成功",
+    data:result
+  })
+}
+
+// 前台用户获取好友聊天信息
+exports.getMessageInfo = async(req,res) => {
+  const params = req.query
+  const { userId,friendId } = params
+  if(!['number'].includes(typeof Number(userId))){
+    return res.send({
+      message: "用户id不可为空~",
+    });
+  }
+  if(!['number'].includes(typeof Number(friendId))){
+    return res.send({
+      message: "好友id不可为空~",
+    });
+  }
+  let result
+  if(userId != friendId){
+    const userList = await dbModel.getMessageInfo(1,[userId,friendId])
+    const friendList = await dbModel.getMessageInfo(1,[friendId,userId])
+    result = [...userList,...friendList]
+  }else{
+    result = await dbModel.getMessageInfo(1,[userId,friendId])
+  }
+  result.sort((a,b) => {
+    const timeA = new Date(a.moment)
+    const timeB = new Date(b.moment)
+    return timeA - timeB
+  })
+  for(const item of result){
+    item.userData = (await dbModel.getMessageInfo(2,[item.userId]))[0]
+    item.friendData = (await dbModel.getMessageInfo(2,[item.friendId]))[0]
+  }
+  res.send({
+    code:200,
+    message:"查询成功",
+    data:result
+  })
+}
+
+// 前台用户获取群信息
+exports.getGroupMessageInfo = async(req,res) => {
+  const params = req.query
+  const { groupId } = params
+  if(!['number'].includes(typeof Number(groupId))){
+    return res.send({
+      message: "群id不可为空~",
+    });
+  }
+  let result = await dbModel.getGroupMessageInfo(1,[groupId])
+  result.sort((a,b) => {
+    const timeA = new Date(a.moment)
+    const timeB = new Date(b.moment)
+    return timeA - timeB
+  })
+  for(const item of result){
+    item.userData = (await dbModel.getGroupMessageInfo(2,[item.userId]))[0]
+  }
+  res.send({
+    code:200,
+    message:"查询成功",
+    data:result
+  })
+}
+
+// 前台用户发送信息
+exports.sendMessage = async(req,res) => {
+  const data = req.body
+  let { userId,friendId,message,type } = data
+  let status = 0
+  let moment = new Date()
+  if(type == 0){
+    // 文字
+    await dbModel.sendMessage(1,[userId,friendId,message,type,status,moment])
+  }else if(type == 1){
+    // 图片链接
+  }else if(type == 2){
+    // 音频链接
+  }
+  res.send({
+    code:200,
+    message:"发送信息成功",
+  })
+}
+
+// 前台用户发送群信息
+exports.sendGroupMessage = async(req,res) => {
+  const data = req.body
+  let { groupId,userId,message,type } = data
+  let status = 0
+  let moment = new Date()
+  if(type == 0){
+    // 文字
+    await dbModel.sendGroupMessage(1,[groupId,userId,message,type,status,moment])
+  }else if(type == 1){
+    // 图片链接
+  }else if(type == 2){
+    // 音频链接
+  }
+  res.send({
+    code:200,
+    message:"发送信息成功",
   })
 }

@@ -183,7 +183,7 @@ const pageTableRef = ref<InstanceType<typeof pageTable>>();
 
 // 活动地点列表数据
 const placesListData = ref([])
-// 用户列表数据
+// 活动列表数据
 const usersListData = ref([])
 
 
@@ -196,7 +196,7 @@ const pageSearchRef = ref<InstanceType<typeof pageSearch>>();
 // 添加按钮对话框formData数据
 const addDialogFormData = ref(gernarateFormData(addDialogConfig));
 // 对话框标题
-const addDialogTitle = ref("添加用户");
+const addDialogTitle = ref("添加活动");
 // 添加对话框组件ref对象
 const addPageDialogRef = ref<InstanceType<typeof pageDialog>>();
 // 添加对话框配置项处理
@@ -222,7 +222,7 @@ const newAddDialogConfig = computed(() => {
   if(placeFormItem){
     placeFormItem.options = placeOptions
   }
-  // 用户处理
+  // 活动处理
   usersListData.value.forEach((item:Record<string,any>) => {
     userOptions.push({
       label:item.name,
@@ -251,10 +251,10 @@ const newAddDialogConfig = computed(() => {
 // 编辑按钮对话框formData数据
 const editDialogFormData = ref(gernarateFormData(editDialogConfig));
 // 对话框标题
-const editDialogTitle = ref("编辑用户");
+const editDialogTitle = ref("编辑活动");
 // 编辑对话框组件ref对象
 const editPageDialogRef = ref<InstanceType<typeof pageDialog>>();
-// 编辑用户id
+// 编辑活动id
 let editUserId = ref<number | string>('')
 // 编辑对话框配置项处理
 const newEditDialogConfig = computed(() => {
@@ -279,7 +279,7 @@ const newEditDialogConfig = computed(() => {
   if(placeFormItem){
     placeFormItem.options = placeOptions
   }
-  // 用户处理
+  // 活动处理
   usersListData.value.forEach((item:Record<string,any>) => {
     userOptions.push({
       label:item.name,
@@ -309,7 +309,7 @@ const detailDialogFormData = ref(gernarateFormData(detailDialogConfig));
 const detailDialogTitle = ref("详情");
 // 详情对话框组件ref对象
 const detailPageDialogRef = ref<InstanceType<typeof pageDialog>>();
-// 详情用户id
+// 详情活动id
 let detailUserId = ref<number | string>('')
 // 详情对话框配置项处理
 const newDetailDialogConfig = computed(() => {
@@ -334,7 +334,7 @@ const newDetailDialogConfig = computed(() => {
   if(placeFormItem){
     placeFormItem.options = placeOptions
   }
-  // 用户处理
+  // 活动处理
   usersListData.value.forEach((item:Record<string,any>) => {
     userOptions.push({
       label:item.name,
@@ -576,7 +576,7 @@ permission.value = getPermission()
 await getPageData(queryInfo.value);
 // 获取活动列表数据
 await getPlacesListData()
-// 获取用户列表数据
+// 获取活动列表数据
 await getUsersListData()
 
 

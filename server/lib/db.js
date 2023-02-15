@@ -9,7 +9,7 @@ const db = mysql.createConnection({
   host:config.database.HOST,
   port:config.database.PORT,
   user:config.database.USER,
-  password:config.database.PASSWORD
+  password:config.database.PASSWORD,
 })
 
 // 连接指定数据库
@@ -17,7 +17,7 @@ const pool = mysql.createPool({
   host:config.database.HOST,
   user:config.database.USER,
   password:config.database.PASSWORD,
-  database:config.database.PARTYTABLE
+  database:config.database.PARTYTABLE,
 })
 
 let bdbs = (sql,values)=>{
@@ -498,25 +498,7 @@ const powerData = [
     type: 0,
     powerName: "add",
     moment:new Date().getTime()
-  },
-  {
-    name: "active",
-    type: 0,
-    powerName: "delete",
-    moment:new Date().getTime()
-  },
-  {
-    name: "active",
-    type: 0,
-    powerName: "modify",
-    moment:new Date().getTime()
-  },
-  {
-    name: "active",
-    type: 0,
-    powerName: "find",
-    moment:new Date().getTime()
-  },
+  }
 ]
 
 
@@ -618,7 +600,7 @@ let vedioes = `create table if not exists vedioes(
 // 活动列表
 let actives = `create table if not exists actives(
   id INT NOT NULL AUTO_INCREMENT,
-  name VARCHAR(100) NOT NULL COMMENT '活动名称',
+  name VARCHAR(1000) NOT NULL COMMENT '活动名称',
   placeId INT NOT NULL COMMENT '活动地点',
   body VARCHAR(1000) NOT NULL COMMENT '活动内容',
   userId INT NOT NULL COMMENT '活动发起人id',
@@ -626,7 +608,9 @@ let actives = `create table if not exists actives(
   joinUser VARCHAR(1000) COMMENT '参与用户id数组',
   score INT COMMENT '活动奖励积分',
   isPass INT NOT NULL COMMENT '审核状态0不通过1通过',
-  moment varchar(100) NOT NULL COMMENT '创建时间',
+  startTime VARCHAR(1000) NOT NULL COMMENT '活动开始时间',
+  endTime VARCHAR(1000) NOT NULL COMMENT '活动结束时间',
+  moment varchar(1000) NOT NULL COMMENT '创建时间',
   PRIMARY KEY (id) 
 )`
 
@@ -675,7 +659,6 @@ let comments = `create table if not exists comments(
   PRIMARY KEY (id) 
 )`
 
-// TODO
 // 订单列表
 let orders = `create table if not exists orders(
   id INT NOT NULL AUTO_INCREMENT,
@@ -688,8 +671,74 @@ let orders = `create table if not exists orders(
   PRIMARY KEY (id) 
 )`
 
-// TODO
-// 订单列表
+// 好友列表
+let friends = `create table if not exists friends(
+  id INT NOT NULL AUTO_INCREMENT,
+  userId INT NOT NULL COMMENT '用户id',
+  friendId INT NOT NULL COMMENT '好友Id',
+  status INT NOT NULL COMMENT '好友状态（0已为好友1申请中2申请发送方，对方未同意）',
+  moment varchar(1000) NOT NULL COMMENT '创建时间',
+  PRIMARY KEY (id) 
+)`
+
+// 一对一消息列表
+let messages = `create table if not exists messages(
+  id INT NOT NULL AUTO_INCREMENT,
+  userId INT NOT NULL COMMENT '用户id',
+  friendId INT NOT NULL COMMENT '好友Id',
+  message varchar(1000) NOT NULL COMMENT '内容',
+  type int  NOT NULL COMMENT '内容类型（0文字1图片链接2音频链接）',
+  status int NOT NULL COMMENT '消息状态（0未读1已读）',
+  moment varchar(1000) NOT NULL COMMENT '创建时间',
+  PRIMARY KEY (id) 
+) charset=utf8mb4`
+
+// 群表
+let groups = `create table if not exists groupes(
+  id INT NOT NULL AUTO_INCREMENT,
+  userId INT COMMENT '用户id',
+  name varchar(1000) NOT NULL COMMENT '群名称',
+  image varchar(1000) NOT NULL COMMENT '群头像',
+  notice varchar(1000) NOT NULL COMMENT '群公告',
+  moment varchar(1000) NOT NULL COMMENT '创建时间',
+  PRIMARY KEY (id) 
+)`
+
+// 群成员列表
+let groupUsers = `create table if not exists groupUsers(
+  id INT NOT NULL AUTO_INCREMENT,
+  groupId INT NOT NULL COMMENT '群id',
+  userId INT NOT NULL COMMENT '用户id',
+  name varchar(1000) NOT NULL COMMENT '群内名称',
+  tip INT NOT NULL COMMENT '未读消息数',
+  shield INT NOT NULL COMMENT '是否屏蔽群消息（0未屏蔽1屏蔽）',
+  moment varchar(1000) NOT NULL COMMENT '创建时间',
+  PRIMARY KEY (id) 
+)`
+
+// 聊天信息列表
+let chatMessages = `create table if not exists chatMessages(
+  id INT NOT NULL AUTO_INCREMENT,
+  userId INT NOT NULL COMMENT '用户id',
+  targetId INT NOT NULL COMMENT '目标id',
+  type INT NOT NULL COMMENT '类型（0为群，1为好友）',
+  moment varchar(1000) NOT NULL COMMENT '创建时间',
+  PRIMARY KEY (id) 
+)`
+
+// 群消息表
+let groupMessages = `create table if not exists groupMessages(
+  id INT NOT NULL AUTO_INCREMENT,
+  groupId INT NOT NULL COMMENT '群id',
+  userId INT NOT NULL COMMENT '用户Id',
+  message varchar(1000) NOT NULL COMMENT '内容',
+  type int  NOT NULL COMMENT '内容类型（0文字1图片链接2音频链接）',
+  status int NOT NULL COMMENT '消息状态（0未读1已读）',
+  moment varchar(1000) NOT NULL COMMENT '创建时间',
+  PRIMARY KEY (id) 
+) charset=utf8mb4`
+
+// 群消息表
 
 // 创建数据表函数
 let createTable = (sql)=>{
@@ -715,6 +764,12 @@ async function create(){
   createTable(gifts)
   createTable(comments)
   createTable(orders)
+  createTable(friends)
+  createTable(messages)
+  createTable(groups)
+  createTable(groupUsers)
+  createTable(groupMessages)
+  createTable(chatMessages)
 
   // 初始化权限数据
   for(let i = 0; i<powerData.length; i++){
@@ -723,6 +778,7 @@ async function create(){
       await powerInit(0,[powerData[i].name,powerData[i].type,powerData[i].powerName,powerData[i].moment])
     }
   }
+
   // 初始化超级管理员数据
   const managerCount = await managerInit(1,'admin')
   if(!managerCount[0].count){
@@ -744,8 +800,30 @@ async function create(){
     const newPassword = bcrypt.hashSync(password, 10);
     await managerInit(2,[name,newPassword,type,powerId,title,null,moment])
   }
+
+  // 初始化群聊大厅
+  const initGroupCount = await registerAdmin(1,['群聊大厅'])
+  if(!initGroupCount[0].count){
+    const name = '群聊大厅'
+    const notice = '所有用户都在这里，大家可以畅所欲言'
+    const image = 'http://localhost:3000/uploads/avatar/default_avatar.jpg'
+    const moment = new Date()
+    await registerAdmin(2,[name,image,notice,moment])
+  }
+
 }
 create()
+
+// 初始化群聊大厅
+function registerAdmin(type,value){
+  if(type === 1){
+    const _sql = "select count(*) as count from groupes where name=?"
+    return query(_sql,value)
+  }else if (type === 2){
+    const _sql = "insert into groupes set name=?,image=?,notice=?,moment=?"
+    return query(_sql,value)
+  }
+}
 
 // 超级管理员注册
 exports.registerAdmin = (type,value) => {
@@ -1257,6 +1335,21 @@ exports.addUser = (type,value) => {
   }else if (type === 2){
     const _sql = "select count(*) as count from users where cardId=?"
     return query(_sql,value)
+  }else if (type === 4){
+    const _sql = "select * from users where cardId=?"
+    return query(_sql,value)
+  }else if (type === 5){
+    const _sql = "select * from groupes where name=?"
+    return query(_sql,value)
+  }else if (type === 6){
+    const _sql = "insert into groupUsers set groupId=?,userId=?,name=?,tip=?,shield=?,moment=?"
+    return query(_sql,value)
+  }else if (type === 7){
+    const _sql = "select * from users"
+    return query(_sql,value)
+  }else if (type === 8){
+    const _sql = "insert into friends set userId=?,friendId=?,status=?,moment=?"
+    return query(_sql,value)
   }
 }
 
@@ -1296,9 +1389,9 @@ exports.findUsers = (type,value) => {
     const whereStr = utils.generateWhere(newArr)
     const _sql = `select * from users ${whereStr}`
     return query(_sql)
-  }else if (type ===3){
+  }else if (type === 3){
     const [organizationId] = value
-    const _sql = `select * from faculties where id=${organizationId}`
+    const _sql = `select * from organizations where id=${organizationId}`
     return query(_sql)
   }
 }
@@ -1472,7 +1565,7 @@ exports.deleteVedio = (type,id) => {
 // 活动添加
 exports.addActive = (type,value) => {
   if(type === 1){
-    const _sql = "insert into actives set name=?,placeId=?,body=?,userId=?,supportUser=?,joinUser=?,score=?,isPass=?,moment=?"
+    const _sql = "insert into actives set name=?,placeId=?,body=?,userId=?,supportUser=?,joinUser=?,score=?,isPass=?,startTime=?,endTime=?,moment=?"
     return query(_sql,value)
   }else if (type === 2){
     const _sql = "select count(*) as count from actives where name=?"
@@ -1483,7 +1576,7 @@ exports.addActive = (type,value) => {
 // 活动修改
 exports.updateActive= (type,value) => {
   if(type === 1){
-    const _sql = "UPDATE actives set name=?,placeId=?,body=?,userId=?,supportUser=?,joinUser=?,score=?,isPass=? where id=?"
+    const _sql = "UPDATE actives set name=?,placeId=?,body=?,userId=?,supportUser=?,joinUser=?,score=?,isPass=?,startTime=?,endTime=? where id=?"
     return query(_sql,value)
   }else if (type === 2){
     const _sql = "select count(*) as count from actives where id=?"
@@ -1942,6 +2035,24 @@ exports.userRegister = (type,value) => {
   }else if (type === 3){
     const _sql = "select count(*) as count from users where phone=?"
     return query(_sql,value)
+  }else if (type === 4){
+    const _sql = "select * from users where cardId=?"
+    return query(_sql,value)
+  }else if (type === 5){
+    const _sql = "select * from groupes where name=?"
+    return query(_sql,value)
+  }else if (type === 6){
+    const _sql = "insert into groupUsers set groupId=?,userId=?,name=?,tip=?,shield=?,moment=?"
+    return query(_sql,value)
+  }else if (type === 7){
+    const _sql = "select * from users"
+    return query(_sql,value)
+  }else if (type === 8){
+    const _sql = "insert into friends set userId=?,friendId=?,status=?,moment=?"
+    return query(_sql,value)
+  }else if(type === 9){
+    const _sql = `insert into chatMessages set userId=?,targetId=?,type=?,moment=?`
+    return query(_sql,value)
   }
 }
 
@@ -1955,6 +2066,9 @@ exports.userLogin = (type,value) => {
     return query(_sql,value)
   }else if (type === 3){
     const _sql = `select * from users where phone=?`
+    return query(_sql,value)
+  }else if (type === 4){
+    const _sql = `select * from users where cardId=?`
     return query(_sql,value)
   }
 }
@@ -2150,3 +2264,181 @@ exports.deleteOrder = async(type,value) => {
   }
 }
 
+// 前台获取活动地点
+exports.getPlaceList = async(type,value) => {
+  if(type === 1){
+    const _sql = `select * from places`
+    return query(_sql)
+  }
+}
+
+// 前台发布活动
+exports.publishActive = (type,value) => {
+  if(type === 1){
+    const _sql = "insert into actives set name=?,placeId=?,body=?,userId=?,supportUser=?,joinUser=?,score=?,isPass=?,startTime=?,endTime=?,moment=?"
+    return query(_sql,value)
+  }
+}
+
+// 前台获取活动列表
+exports.getActiveList = async(type,value) => {
+  if(type === 1){
+    const _sql = `select * from actives`
+    return query(_sql)
+  }else if(type === 2){
+    const _sql = `select * from places where id=?`
+    return query(_sql,value)
+  }else if(type === 3){
+    const _sql = `select * from users where id=?`
+    return query(_sql,value)
+  }else if(type === 4){
+    const _sql = `select * from organizations where id=?`
+    return query(_sql,value)
+  }
+}
+
+// 前台获取文章详情
+exports.getActiveDetail = (type,value) => {
+  if(type === 1){
+    const _sql = `select * from actives where id=?`
+    return query(_sql,value)
+  }else if(type ===2){
+    const _sql = `select count(*) as count from actives where id=?`
+    return query(_sql,value)
+  }else if(type === 3){
+    const _sql = `select * from places where id=?`
+    return query(_sql,value)
+  }else if(type === 4){
+    const _sql = `select * from users where id=?`
+    return query(_sql,value)
+  }else if(type === 5){
+    const _sql = `select * from organizations where id=?`
+    return query(_sql,value)
+  }
+}
+
+// 前台用户参与活动
+exports.joinActive = (type,value) => {
+  if(type === 1){
+    const _sql = "select count(*) as count from actives where id=?"
+    return query(_sql,value)
+  }else if (type === 2){
+    const _sql = "select * from actives where id=?"
+    return query(_sql,value)
+  }else if (type === 3){
+    const _sql = "UPDATE actives set joinUser=? where id=?"
+    return query(_sql,value)
+  }
+}
+
+// 前台获取用户参与活动
+exports.getUserJoinActive = async(type,value) => {
+  if(type === 1){
+    const _sql = `select * from actives`
+    return query(_sql)
+  }else if(type === 2){
+    const _sql = `select * from places where id=?`
+    return query(_sql,value)
+  }
+}
+
+// 前台搜索文章或视频列表
+exports.getSearchList = (type,value) => {
+  if(type === 1){
+    const _sql = `select * from articles where title like "%${value}%"`
+    return query(_sql)
+  }else if (type === 2){
+    const _sql = `select * from vedioes where title like "%${value}%"`
+    return query(_sql)
+  }
+}
+
+// 前台获取通讯录好友列表
+exports.getFriendList = (type,value) => {
+  if(type === 1){
+    const _sql = `select * from friends where userId=?`
+    return query(_sql,value)
+  }else if (type === 2){
+    const _sql = `select * from users where id=?`
+    return query(_sql,value)
+  }
+}
+
+// 前台获取通讯录群列表
+exports.getGroupList = (type,value) => {
+  if(type === 1){
+    const _sql = `select * from groupUsers where userId=?`
+    return query(_sql,value)
+  }else if (type === 2){
+    const _sql = `select * from groupes where id=?`
+    return query(_sql,value)
+  }else if (type === 3){
+    const _sql = `select * from groupUsers where groupId=?`
+    return query(_sql,value)
+  }else if (type === 4){
+    const _sql = `select * from users where id=?`
+    return query(_sql,value)
+  }
+}
+
+// 前台创建消息列表
+exports.addChatMessage = (type,value) => {
+  if(type === 1){
+    const _sql = `select count(*) as count from chatMessages where userId=? and targetId=? and type=?`
+    return query(_sql,value)
+  }else if(type === 2){
+    const _sql = `insert into chatMessages set userId=?,targetId=?,type=?,moment=?`
+    return query(_sql,value)
+  }
+}
+// 前台用户获取消息列表
+exports.getChatMessage = (type,value) => {
+  if(type === 1){
+    const _sql = `select * from chatMessages where userId=?`
+    return query(_sql,value)
+  }else if(type === 2){
+    const _sql = `select * from groupes where id=?`
+    return query(_sql,value)
+  }else if(type === 3){
+    const _sql = `select * from users where id=?`
+    return query(_sql,value)
+  }
+}
+
+// 前台用户获取好友聊天信息
+exports.getMessageInfo = (type,value) => {
+  if(type === 1){
+    const _sql = `select * from messages where userId=? and friendId=?`
+    return query(_sql,value)
+  }else if(type === 2){
+    const _sql = `select * from users where id=?`
+    return query(_sql,value)
+  }
+}
+
+// 前台用户获取群信息
+exports.getGroupMessageInfo = (type,value) => {
+  if(type === 1){
+    const _sql = `select * from groupMessages where groupId=?`
+    return query(_sql,value)
+  }else if(type === 2){
+    const _sql = `select * from users where id=?`
+    return query(_sql,value)
+  }
+}
+
+// 前台用户发送信息
+exports.sendMessage = (type,value) => {
+  if(type === 1){
+    const _sql = `insert into messages set userId=?,friendId=?,message=?,type=?,status=?,moment=?`
+    return query(_sql,value)
+  }
+}
+
+// 前台用户发送群信息
+exports.sendGroupMessage = (type,value) => {
+  if(type === 1){
+    const _sql = `insert into groupMessages set groupId=?,userId=?,message=?,type=?,status=?,moment=?`
+    return query(_sql,value)
+  }
+}

@@ -9,5 +9,9 @@
         "video",
         "player",
         "uniapp"
-    ]
+    ],
+    "dependencies": {
+        "dayjs": "^1.11.7",
+        "grapheme-splitter": "^1.0.4"
+    }
 }

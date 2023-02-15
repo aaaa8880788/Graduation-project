@@ -1,18 +1,21 @@
 <template>
-	<view class="home">
-		<!-- 导航栏 -->
-		<navBar @searchClick="searchClickHandle"></navBar>
-		<navTop 
-			:navData="navData"
-			@itemChange="itemChangeHandle">
-		</navTop>
+	<view class="article_search">
+		<uni-search-bar 
+			:focus="true" 
+			v-model="searchValue"
+			bgColor="#e2e2e2"
+			radius="30"
+			@confirm="confirm" 
+			@cancel="cancel">
+		</uni-search-bar>
 		<!-- 文章列表 -->
 		<scroll-view
+			v-if="articleList.length"
 			class="article_list" 
 			scroll-y="true" >
 			<view
 				class="article"
-				v-for="item,index in currentArticleList"
+				v-for="item,index in articleList"
 				:key="item.id"
 				@click="articleClickHandle(item)">
 				<view class="article_title">
@@ -31,6 +34,11 @@
 				</view>
 			</view>
 		</scroll-view>
+		<u-empty
+			v-else
+		  mode="search"
+		  icon="http://cdn.uviewui.com/uview/empty/car.png">
+		</u-empty>
 		<!-- 提示组件 -->
 		<u-toast ref="uToast"></u-toast>
 	</view>
@@ -41,35 +49,26 @@
 	export default {
 		data() {
 			return {
-				navData:['推荐','时事要闻','新思想','党史','党建'],
-				currentActive:'推荐',
+				searchValue:'',
 				articleList:[]
 			};
 		},
-		computed:{
-			currentArticleList(){
-				let arr = []
-				const article = this.articleList.find(item => item.name === this.currentActive)
-				if(article){
-						arr = article.data
-				}
-				return arr
-			},
-		},
 		methods:{
-			itemChangeHandle(index,item){
-				this.currentActive = item
-			},
-			getArticleList(){
+			confirm({value}){
 				uni.request({
-					url: `http://localhost:3000/web/api/getArticlesList`,
+					url: `http://localhost:3000/web/api/getSearchList`,
 					method: 'GET',
+					data:{
+						title:value,
+						type:0
+					},
 					header:{
 						Authorization:uni.getStorageSync('token') ? JSON.parse(uni.getStorageSync('token')) : ''
 					},
 					success: (res) => {
 						if(res.data.code === 200){
 							this.articleList = res.data.data
+							console.log('articleList---',this.articleList);
 						}else if(res.data.code === 401){
 							this.$refs.uToast.show({
 								type: 'error',
@@ -94,6 +93,9 @@
 					}
 				})
 			},
+			cancel(){
+				uni.navigateBack()
+			},
 			transformDate(date,format){
 				return formateUtcString(date,format)
 			},
@@ -103,23 +105,17 @@
 					url:`/pages/articleDetail/articleDetail?articleId=${item.id}`,
 				})
 			},
-			searchClickHandle(){
-				uni.navigateTo({
-					url:'/pages/articleSearch/articleSearch'
-				})
-			}
-		},
-		onLoad() {
-			this.getArticleList()
 		}
 	}
 </script>
 
 <style lang="less" scoped>
-.home{
-	height: calc(100vh - 50px);
+.article_search{
+	width: 100vw;
+	height: 100vh;
+	background-color: #fff;
 	.article_list{
-		height: calc(100vh - 50px - 44px - 80rpx);
+		height: calc(100vh - 56px);
 		box-sizing: border-box;
 		padding: 30rpx;
 		.article{

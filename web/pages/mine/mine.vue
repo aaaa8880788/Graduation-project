@@ -315,6 +315,9 @@
 						})
 						break;
 					case "参与活动":
+						uni.navigateTo({
+							url: '/pages/activeJoin/activeJoin'
+						})
 						break;
 					case "个人信息":
 						uni.navigateTo({

@@ -10,7 +10,7 @@
 				</view>
 			</template>
 			<view class="nav_center">
-				<view class="search">
+				<view class="search" @click="centerClickHandle">
 					<uni-icons 
 						class="input-uni-icon search_icon" 
 						type="search" 
@@ -46,10 +46,12 @@
 		},
 		methods:{
 			rightClickHandle(){
-				console.log('点击了')
 				uni.switchTab({
 					url: '/pages/mine/mine'
 				})
+			},
+			centerClickHandle(){
+				this.$emit('searchClick')
 			}
 		}
 	}
