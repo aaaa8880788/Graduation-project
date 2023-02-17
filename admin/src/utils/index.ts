@@ -44,6 +44,9 @@ export function transFormPowerName(powerName:string){
     case 'vedio':
       str = '视频'
       break;
+    case 'order':
+      str = '订单'
+      break;
     case 'find':
       str = '查询'
       break;

@@ -24,7 +24,7 @@ const tableConfig: ITable = {
     {
       prop: "supportUser",
       slotName:"supportUser",
-      label: "收藏人数",
+      label: "点赞人数",
       align: "center",
       minWidth: "30",
     },

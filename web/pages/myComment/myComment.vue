@@ -62,9 +62,9 @@
 			navLeftHandle(){
 				uni.navigateBack()
 			},
-			getCommentList(){
+			getMyCommentList(){
 				uni.request({
-					url: `http://localhost:3000/web/api/getCommentList?id=${this.userId}`,
+					url: `http://localhost:3000/web/api/getMyCommentList?id=${this.userId}`,
 					method: 'GET',
 					header:{
 						Authorization:uni.getStorageSync('token') ? JSON.parse(uni.getStorageSync('token')) : ''
@@ -124,7 +124,7 @@
 			this.userId = uni.getStorageSync('userId')
 		},
 		onShow(){
-			this.getCommentList()
+			this.getMyCommentList()
 		}
 	}
 </script>

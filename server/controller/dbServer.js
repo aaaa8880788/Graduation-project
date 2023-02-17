@@ -2874,6 +2874,29 @@ exports.getCommentList = async(req,res) => {
   })
 }
 
+// 前台获取我的评论接口
+exports.getMyCommentList = async(req,res) => {
+  const params = req.query
+  let {id} = params
+  if(!['number','string'].includes(typeof id) && [null,undefined].includes(id)){
+    return res.send({
+      message:'请传入正确格式的id'
+    })
+  }
+  const result = await dbModel.getMyCommentList(1,[id])
+  for(const item of result){
+    item.supportUser = JSON.parse(item.supportUser)
+    item.fatherData = (await dbModel.getMyCommentList(2,[item.fatherId]))[0]
+    item.userData = (await dbModel.getMyCommentList(3,[item.userId]))[0]
+  }
+  const data = result.filter(item => item.status === 1)
+  res.send({
+    code:200,
+    message:"评论列表查询成功~",
+    data:data,
+  })
+}
+
 // 前台发布评论接口
 exports.publishComment = async (req,res) => {
   const data = req.body
@@ -3085,26 +3108,6 @@ exports.getLoveVedioList = async(req,res) => {
     code:200,
     message:"查询成功",
     data:data
-  })
-}
-
-// 前台获取评论列表
-exports.getCommentList = async(req,res) => {
-  const params = req.query
-  let {id} = params
-  if(!['number'].includes(typeof Number(id))){
-    return res.send({
-      message: "id字段必传",
-    });
-  }
-  const result = await dbModel.getCommentList([id])
-  result.forEach(item=>{
-    item.supportUser = JSON.parse(item.supportUser)
-  })
-  res.send({
-    code:200,
-    message:"查询成功",
-    data:result
   })
 }
 

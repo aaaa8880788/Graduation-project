@@ -37,6 +37,8 @@ const routes = function(app){
   app.get("/web/api/getVedioDetail",controller.getVedioDetail)
   // 前台获取具体文章或视频列表评论列表接口
   app.get("/web/api/getCommentList",controller.getCommentList)
+  // 前台获取我的评论接口
+  app.get("/web/api/getMyCommentList",controller.getMyCommentList)
   // 前台发布评论接口
   app.post("/web/api/publishComment",controller.publishComment)
   // 前台评论点赞

@@ -2141,6 +2141,20 @@ exports.getCommentList = (type,value) => {
   }
 }
 
+// 前台获取我的评论接口
+exports.getMyCommentList = (type,value) => {
+  if(type === 1){
+    const _sql = `select * from comments where userId=?`
+    return query(_sql,value)
+  }else if(type === 2){
+    const _sql = `select * from articles where id=?`
+    return query(_sql,value)
+  }else if(type === 3){
+    const _sql = `select * from users where id=?`
+    return query(_sql,value)
+  }
+}
+
 // 前台发布评论接口
 exports.publishComment = (type,value) => {
   if(type === 1){
@@ -2210,11 +2224,6 @@ exports.getLoveVedioList = async () => {
   return query(_sql)
 }
 
-// 前台获取评论列表
-exports.getCommentList = async (value) => {
-  const _sql = `select * from comments where userId=?`
-  return query(_sql,value)
-}
 
 // 前台获取商品列表
 exports.getGoodList = async () => {
