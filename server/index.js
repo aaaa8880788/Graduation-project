@@ -1,9 +1,28 @@
 const express = require("express")
 const path = require("path")
+
 // 基本变量
 const config = require('./config/default')
 
 const app = express()
+
+// socket.io
+const { Server } = require('socket.io')
+const io = new Server(3001,{
+  cors: {
+    origin: "http://localhost:3001"
+  }
+});
+io.on('connection', (socket) => {
+    console.log('连接成功');
+})
+// const server = app.listen(3001)
+// const io = require("socket.io").listen(server)
+// io.on('connection', (socket) => {
+//   console.log('连接成功');
+// })
+
+
 // 解决跨域
 app.use(require("cors")());
 // 解析json
@@ -12,9 +31,6 @@ app.use(express.json());
 // 使用 `express.static()` 中间件，将 `uploads` 目录中的图片托管为静态资源
 // 托管静态资源文件
 app.use("/uploads", express.static(path.join(__dirname, "./uploads")));
-
-
-
 
 // 引入服务端路由
 require('./routes/admin/index')(app)

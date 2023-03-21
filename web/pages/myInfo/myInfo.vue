@@ -110,6 +110,19 @@
 						border="none">
 					</u--input>
 				</u-form-item>
+				<u-form-item
+					label="学院"
+					prop="myInfoData.facultyData.name"
+					borderBottom
+					ref="item2"
+					@click="disabledItemClickHandle">
+					<u--input
+						v-if="myInfoData.facultyData"
+						v-model="myInfoData.facultyData.name"
+						readonly
+						border="none">
+					</u--input>
+				</u-form-item>
 				<!-- 学生才显示 -->
 				<template v-if="myInfoData.type === 0">
 					<u-form-item

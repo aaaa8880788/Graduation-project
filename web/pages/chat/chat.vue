@@ -64,7 +64,8 @@
 										<text>{{ item.targetData.name }}</text>
 									</view>
 									<view class="chat_time">
-										<text>18:28</text>
+										<text v-if="item.lastMessageData">{{ changeTime(item.lastMessageData.moment) }}</text>
+										<text v-else>{{ changeTime(item.moment) }}</text>	
 									</view>
 								</view>
 								<view class="chat_item_right_content">

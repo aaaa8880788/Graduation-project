@@ -18,15 +18,17 @@ async function mapMenusToRoutes(userMenus: any[]): Promise<RouteRecordRaw[]> {
     allRoutes.push(route.default)
   }
   // 2.根据菜单获取需要添加的routes
+  console.log('userMenus---',userMenus);
+  console.log('allRoutes---',allRoutes);
+  console.log('routes---',routes);
+  
   for (const menu of userMenus) {
     const route = allRoutes.find((route) => route.name === menu.name)
     if (route) {
       routes.push(route)    
-      if(!firstMenuPath){
-        firstMenuPath = route.path
-      }
     }
   }
+  firstMenuPath = routes[0].path
   return routes
 }
 // 获取权限

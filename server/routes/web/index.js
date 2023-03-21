@@ -91,6 +91,8 @@ const routes = function(app){
   app.post("/web/api/sendMessage",controller.sendMessage)
   // 前台用户发送群信息
   app.post("/web/api/sendGroupMessage",controller.sendGroupMessage)
+  // 前台用户创建群聊
+  app.post("/web/api/createGroup",controller.createGroup)
 }
 
 module.exports = routes

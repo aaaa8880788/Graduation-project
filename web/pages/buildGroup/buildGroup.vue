@@ -5,10 +5,7 @@
 			@clickLeft="navLeftHandle"/>
 		<view class="build_group_center">
 			<view class="image_upload">
-				<uni-file-picker
-					ref="uUpload"
-					v-bind="uploadConfig">
-				</uni-file-picker>
+				<avatarUpload v-model="groupImage"></avatarUpload>
 			</view>
 			<view class="group_name">
 				<u-input 
@@ -29,39 +26,39 @@
 					v-for="(item,index) in userList"
 					:key="item.id"
 					@click="itemClickHandle(item)">
-					<view class="user_item_left">
-						<u-icon
-							v-if="isSelect(item.friendId)"
-							name="checkmark-circle-fill"
-							size="20"
-							color="#ffe431">
-						</u-icon>
-						<u-icon
-							v-else
-							name="checkmark-circle"
-							size="20"
-							color="#ffe431">
-						</u-icon>
-					</view>
-					<view class="user_item_right">
-						<image 
-							v-if="item.friendData.avatar"
-							class="user_avatar"
-							:src="item.friendData.avatar"></image>
-						<view
-							v-else
-							class="user_avatar">
-							<text>默认</text>
+						<view class="user_item_left">
+							<u-icon
+								v-if="isSelect(item.friendId)"
+								name="checkmark-circle-fill"
+								size="20"
+								color="#ffe431">
+							</u-icon>
+							<u-icon
+								v-else
+								name="checkmark-circle"
+								size="20"
+								color="#ffe431">
+							</u-icon>
 						</view>
-						<view class="user_info">
-							<view class="user_name">
-								<text>{{ item.friendData.name }}</text>
+						<view class="user_item_right">
+							<image 
+								v-if="item.friendData.avatar"
+								class="user_avatar"
+								:src="item.friendData.avatar"></image>
+							<view
+								v-else
+								class="user_avatar">
+								<text>默认</text>
 							</view>
-							<view class="user_indentify">
-								<text>{{ getIdentity(item.friendData.type) }}</text>
+							<view class="user_info">
+								<view class="user_name">
+									<text>{{ item.friendData.name }}</text>
+								</view>
+								<view class="user_indentify">
+									<text>{{ getIdentity(item.friendData.type) }}</text>
+								</view>
 							</view>
 						</view>
-					</view>
 				</view>
 			</scroll-view>
 		</view>
@@ -69,7 +66,8 @@
 			<u-button 
 				v-if="isAllowCreate"
 				type='primary'
-				shape='circle'>
+				shape='circle'
+				@click="createBtnClickHandle">
 				创建
 			</u-button>
 			<u-button
@@ -114,6 +112,7 @@
 					placeholder:'请输入群名称'
 				},
 				userId:'',
+				groupImage:'',
 				content:'',
 				userList:[],
 				fileList:[],
@@ -127,7 +126,7 @@
 				}
 			},
 			isAllowCreate(){
-				if(!this.content || !this.selectUserList.length){
+				if(!this.content || !this.selectUserList.length || !this.groupImage){
 					return false
 				}else{
 					return true
@@ -135,16 +134,6 @@
 			}
 		},
 		methods:{
-			beforeUpload(index, list) {
-				console.log('index--',index);
-				console.log('list--',list);
-			},
-			onSuccessHandle(index){
-				console.log(index);
-			},
-			onErrorHandle(err){
-				console.log(err);
-			},
 			getIdentity(type){
 				switch (type){
 					case 0:
@@ -166,6 +155,53 @@
 			// 导航栏左侧按钮点击触发
 			navLeftHandle(){
 				uni.navigateBack()
+			},
+			createBtnClickHandle(){
+				uni.request({
+						url: `http://localhost:3000/web/api/createGroup`,
+						method: 'POST',
+						header:{
+							Authorization:uni.getStorageSync('token') ? JSON.parse(uni.getStorageSync('token')) : ''
+						},
+						data:{
+							groupLeaderId:this.userId,
+							name:this.content,
+							groupUserId:this.selectUserList,
+							groupImage:this.groupImage,
+						},
+						success: (res) => {
+							if(res.data.code === 200){
+								this.$refs.uToast.show({
+									type: 'success',
+									message: '群聊创建成功~',
+									icon:false
+								})
+								setTimeout(() => {
+									uni.navigateBack()
+								},2000)
+							}else if(res.data.code === 401){
+								this.$refs.uToast.show({
+									type: 'error',
+									message: res.data.message,
+									icon:false
+								},)
+								setTimeout(()=>{
+									uni.redirectTo({
+										url:'/pages/login/login'
+									})
+								},2000)
+							}else{
+								this.$refs.uToast.show({
+									type: 'error',
+									message: res.data.message,
+									icon:false
+								},)
+							}
+						},
+						fail: (err) => {
+							console.log('err',err);
+						}
+				})
 			},
 			// 获取好友列表
 			getFriendList(){
@@ -229,13 +265,7 @@
 		align-items: center;
 		padding: 0 30rpx;
 		.image_upload{
-			width: 160rpx;
-			height: 160rpx;
 			margin-bottom: 50rpx;
-			background-color: #ffe431;
-			display: flex;
-			justify-content: center;
-			align-items: center;
 			border-radius: 20rpx;
 			.add_button{
 				position: absolute;
@@ -310,8 +340,5 @@
 .active_select{
 	color: red;
 }
-
-</style>
-<style>
 
 </style>

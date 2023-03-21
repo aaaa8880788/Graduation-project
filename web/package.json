@@ -12,6 +12,8 @@
     ],
     "dependencies": {
         "dayjs": "^1.11.7",
-        "grapheme-splitter": "^1.0.4"
+        "engine.io-parser": "^5.0.6",
+        "grapheme-splitter": "^1.0.4",
+        "socket.io-client": "4.5.0"
     }
 }

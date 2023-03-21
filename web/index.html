@@ -15,6 +15,10 @@
   </head>
   <body>
     <div id="app"><!--app-html--></div>
+		<script type="module">
+		  import { io } from "https://cdn.socket.io/4.4.1/socket.io.esm.min.js";
+		  window.socket = io('http://localhost:3001');
+		</script>
     <script type="module" src="/main.js"></script>
   </body>
 </html>

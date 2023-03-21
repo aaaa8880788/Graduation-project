@@ -37,8 +37,6 @@ const router = createRouter({
 router.beforeEach(async(to, from) => {
   if (to.path !== "/login") {
     const token = localCache.getCache("token");
-    const userId = localCache.getCache("userId");
-    const menuList = localCache.getCache("menuList");
     if (!token) {
       ElMessage({
         message: "登录失效，请重新登录",

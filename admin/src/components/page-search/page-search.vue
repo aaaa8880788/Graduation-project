@@ -7,7 +7,7 @@
       @update:modelValue="valueChange($event)">
       <template #header>
         <div class="header">
-          <h1>高级检索</h1>
+          <!-- <h1>高级检索</h1> -->
         </div>
       </template>
       <template #footer>

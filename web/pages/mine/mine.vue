@@ -84,6 +84,8 @@
 					</view>
 				</view>
 			</view>
+			<view class="blank_box">
+			</view>
 		</scroll-view>
 		<!-- 提示组件 -->
 		<uni-popup
@@ -477,5 +479,8 @@
 				}
 			}
 		}
+	}
+	.blank_box{
+		height: 40rpx;
 	}
 </style>

@@ -3397,11 +3397,12 @@ exports.getSearchList = async(req,res) => {
 exports.getFriendList = async(req,res) => {
   const params = req.query
   const { id } = params
-  const result = await dbModel.getFriendList(1,[id])
+  let result = await dbModel.getFriendList(1,[id])
   for(const item of result){
     item.userData = (await dbModel.getFriendList(2,[item.userId]))[0]
     item.friendData = (await dbModel.getFriendList(2,[item.friendId]))[0]
   }
+  result = result.filter(item => item.userId !== item.friendId)
   res.send({
     code:200,
     message:"查询成功",
@@ -3613,5 +3614,40 @@ exports.sendGroupMessage = async(req,res) => {
   res.send({
     code:200,
     message:"发送信息成功",
+  })
+}
+
+// 前台用户创建群聊
+exports.createGroup = async(req,res) => {
+  const data = req.body
+  let { groupLeaderId,name,groupUserId,groupImage } = data
+  groupUserId.push(groupLeaderId)
+  let moment = new Date()
+  let notice = '群聊信息，大家可以在这里交流~'
+  let tip = 0
+  let shield = 0
+  // 判断群是否存在
+  const groupCount = await dbModel.createGroup(2,[groupLeaderId,name])
+  if(groupCount[0].count){
+    return res.send({
+      message:"群聊已存在，请勿重复创建"
+    })
+  }
+  // 创建群
+  await dbModel.createGroup(1,[groupLeaderId,name,groupImage,notice,moment])
+  // 获取群信息
+  const groupData = (await dbModel.createGroup(3,[groupLeaderId,name]))[0]
+  // 添加群用户
+  for(const userId of groupUserId){
+    const userData = (await dbModel.createGroup(4,[userId]))[0]
+    await dbModel.createGroup(5,[groupData.id,userId,userData.name,tip,shield,moment])
+  }
+  res.send({
+    code:200,
+    message:"创建群聊成功~",
+    data:{
+      groupId:groupData.id,
+      groupName:name
+    }
   })
 }

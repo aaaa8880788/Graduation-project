@@ -2451,3 +2451,23 @@ exports.sendGroupMessage = (type,value) => {
     return query(_sql,value)
   }
 }
+
+// 前台用户创建群聊
+exports.createGroup = (type,value) => {
+  if(type === 1){
+    const _sql = `insert into groupes set userId=?,name=?,image=?,notice=?,moment=?`
+    return query(_sql,value)
+  }else if(type === 2){
+    const _sql = `select count(*) as count from groupes where userId=? and name=?`
+    return query(_sql,value)
+  }else if(type === 3){
+    const _sql = `select * from groupes where userId=? and name=?`
+    return query(_sql,value)
+  }else if(type === 4){
+    const _sql = `select * from users where id=?`
+    return query(_sql,value)
+  }else if(type === 5){
+    const _sql = `insert into groupUsers set groupId=?,userId=?,name=?,tip=?,shield=?,moment=?`
+    return query(_sql,value)
+  }
+}
