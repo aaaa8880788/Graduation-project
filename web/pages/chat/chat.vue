@@ -144,6 +144,11 @@
 			}
 		},
 		methods:{
+			// socket模块
+			// 发送-用户登陆注册消息
+			joinSocket(userId){
+				this.socket.emit('userLogin',userId)
+			},
 			// 处理时间
 			changeTime(date){
 				return dataTime1(date)
@@ -261,9 +266,20 @@
 			changeTime(date) {
 				return dataTime(date)
 			},
+			// 接收消息(1.接收好友信息 2.接收群信息)-socket
+			receiveSocketMessage() {
+				this.socket.on('userMessage',(data) => {
+					this.getChatMessage()
+				})
+				this.socket.on('groupMessage',(data) => {
+					this.getChatMessage()
+				})
+			}
 		},
 		onLoad() {
 			this.userId = uni.getStorageSync('userId')
+			this.joinSocket(this.userId)	// socket发送-登陆注册消息
+			this.receiveSocketMessage()
 		},
 		onShow(){
 			this.getUserInfo()

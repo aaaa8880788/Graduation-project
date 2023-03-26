@@ -2425,6 +2425,14 @@ exports.getMessageInfo = (type,value) => {
   }
 }
 
+// 前台用户根据id获取信息数据
+exports.getMessageById = (type,value) => {
+  if(type === 1){
+    const _sql = `select * from messages where id=?`
+    return query(_sql,value)
+  }
+}
+
 // 前台用户获取群信息
 exports.getGroupMessageInfo = (type,value) => {
   if(type === 1){
@@ -2432,6 +2440,14 @@ exports.getGroupMessageInfo = (type,value) => {
     return query(_sql,value)
   }else if(type === 2){
     const _sql = `select * from users where id=?`
+    return query(_sql,value)
+  }
+}
+
+// 前台用户根据id获取群信息
+exports.getGroupMessageById = (type,value) => {
+  if(type === 1){
+    const _sql = `select * from groupMessages where id=?`
     return query(_sql,value)
   }
 }

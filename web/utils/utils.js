@@ -209,7 +209,8 @@ export function	dataTime(d) {
 		now = new Date(now)
 		var told = old.getTime()
 		var tnow = now.getTime()
-		if(tnow > (told+1000*60*5)) {
+		// 1分钟
+		if(tnow > (told+1000*60*1)) {
 			return now
 		} else {
 			return ''

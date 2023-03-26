@@ -88,9 +88,9 @@ const routes = function(app){
   // 前台用户获取群信息
   app.get("/web/api/getGroupMessageInfo",controller.getGroupMessageInfo)
   // 前台用户发送信息
-  app.post("/web/api/sendMessage",controller.sendMessage)
+  // app.post("/web/api/sendMessage",controller.sendMessage)
   // 前台用户发送群信息
-  app.post("/web/api/sendGroupMessage",controller.sendGroupMessage)
+  // app.post("/web/api/sendGroupMessage",controller.sendGroupMessage)
   // 前台用户创建群聊
   app.post("/web/api/createGroup",controller.createGroup)
 }

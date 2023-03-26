@@ -7,20 +7,7 @@ const config = require('./config/default')
 const app = express()
 
 // socket.io
-const { Server } = require('socket.io')
-const io = new Server(3001,{
-  cors: {
-    origin: "http://localhost:3001"
-  }
-});
-io.on('connection', (socket) => {
-    console.log('连接成功');
-})
-// const server = app.listen(3001)
-// const io = require("socket.io").listen(server)
-// io.on('connection', (socket) => {
-//   console.log('连接成功');
-// })
+require('./lib/socket')
 
 
 // 解决跨域

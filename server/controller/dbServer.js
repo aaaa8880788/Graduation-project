@@ -3578,43 +3578,114 @@ exports.getGroupMessageInfo = async(req,res) => {
 }
 
 // 前台用户发送信息
-exports.sendMessage = async(req,res) => {
-  const data = req.body
+// exports.sendMessage = async(req,res) => {
+//   const data = req.body
+//   let { userId,friendId,message,type } = data
+//   let status = 0
+//   let moment = new Date()
+//   if(type == 0){
+//     // 文字
+//     await dbModel.sendMessage(1,[userId,friendId,message,type,status,moment])
+//   }else if(type == 1){
+//     // 图片链接
+//   }else if(type == 2){
+//     // 音频链接
+//   }
+//   res.send({
+//     code:200,
+//     message:"发送信息成功",
+//   })
+// }
+
+// 前台用户发送信息(socket)
+exports.sendMessageSocket = async(data) => {
   let { userId,friendId,message,type } = data
   let status = 0
   let moment = new Date()
+  let insertId
   if(type == 0){
     // 文字
-    await dbModel.sendMessage(1,[userId,friendId,message,type,status,moment])
+    insertId = (await dbModel.sendMessage(1,[userId,friendId,message,type,status,moment])).insertId
   }else if(type == 1){
     // 图片链接
   }else if(type == 2){
     // 音频链接
   }
-  res.send({
-    code:200,
-    message:"发送信息成功",
-  })
+  // 获取该信息
+  let result = (await dbModel.getMessageById(1,[insertId]))
+  for(const item of result){
+    item.userData = (await dbModel.getMessageInfo(2,[item.userId]))[0]
+    item.friendData = (await dbModel.getMessageInfo(2,[item.friendId]))[0]
+    // 为好友创建信息列表
+    // 1.先查询数据是否存在
+    const count = (await dbModel.addChatMessage(1,[item.friendId,item.userId,1]))[0]
+    if(!count.count){
+      // 2.数据不存在,创建聊天信息数据
+      let moment = new Date()
+      await dbModel.addChatMessage(2,[item.friendId,item.userId,1,moment])
+    }
+  }
+  return result[0]
 }
 
 // 前台用户发送群信息
-exports.sendGroupMessage = async(req,res) => {
-  const data = req.body
-  let { groupId,userId,message,type } = data
+// exports.sendGroupMessage = async(req,res) => {
+//   const data = req.body
+//   let { groupId,userId,message,type } = data
+//   let status = 0
+//   let moment = new Date()
+//   if(type == 0){
+//     // 文字
+//     await dbModel.sendGroupMessage(1,[groupId,userId,message,type,status,moment])
+//   }else if(type == 1){
+//     // 图片链接
+//   }else if(type == 2){
+//     // 音频链接
+//   }
+//   res.send({
+//     code:200,
+//     message:"发送信息成功",
+//   })
+// }
+
+// 前台用户发送群信息(socket)
+exports.sendGroupMessage = async(data) => {
+let { groupId,userId,message,type } = data
   let status = 0
   let moment = new Date()
+  let insertId
   if(type == 0){
     // 文字
-    await dbModel.sendGroupMessage(1,[groupId,userId,message,type,status,moment])
+    insertId = (await dbModel.sendGroupMessage(1,[groupId,userId,message,type,status,moment])).insertId
   }else if(type == 1){
     // 图片链接
   }else if(type == 2){
     // 音频链接
   }
-  res.send({
-    code:200,
-    message:"发送信息成功",
-  })
+  // 获取该群条信息
+  let groupMessage = (await dbModel.getGroupMessageById(1,[insertId]))
+  for(const item of groupMessage){
+    item.userData = (await dbModel.getGroupMessageInfo(2,[item.userId]))[0]
+    item.groupData = (await dbModel.getChatMessage(2,[item.groupId]))[0]
+  }
+  // 获取该群成员
+  let groupUser = (await dbModel.getGroupList(3,[groupId]))
+  // 为群友友创建信息列表
+  for(const item of groupUser){
+    item.userData = (await dbModel.getGroupMessageInfo(2,[item.userId]))[0]
+    item.groupData = (await dbModel.getChatMessage(2,[item.groupId]))[0]
+    // 1.先查询数据是否存在
+    const count = (await dbModel.addChatMessage(1,[item.userId,item.groupId,0]))[0]
+    if(!count.count){
+      // 2.数据不存在,创建聊天信息数据
+      let moment = new Date()
+      await dbModel.addChatMessage(2,[item.userId,item.groupId,0,moment])
+    }
+  }
+  return {
+    groupMessage: groupMessage[0],
+    groupUser
+  }
 }
 
 // 前台用户创建群聊

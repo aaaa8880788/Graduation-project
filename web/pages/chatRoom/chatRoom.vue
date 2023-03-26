@@ -21,7 +21,7 @@
 					:id="`message${item.id}`">
 						<!-- 时间 -->
 						<view 
-							v-if="item.moment" 
+							v-if="item.moment && !item.justNow" 
 							class="chat_time">
 							<text>{{changeTime(item.moment)}}</text>
 						</view>
@@ -142,7 +142,7 @@
 </template>
 
 <script>
-	import { chatData,dataTime1 } from '../../utils/utils.js'
+	import { chatData,dataTime1,spacTime } from '../../utils/utils.js'
 	export default {
 		data() {
 			return {
@@ -254,6 +254,7 @@
 					success: (res) => {
 						if(res.data.code === 200){
 							this.chatData = res.data.data
+							this.ToBottom()
 							console.log('chatData---',this.chatData);
 						}else if(res.data.code === 401){
 							this.$refs.uToast.show({
@@ -280,44 +281,31 @@
 				})
 			},
 			confirmHandle(value){
+				const data = {
+					userId:this.userId,
+					friendId:this.friendId,
+					message:value,
+					type:0
+				}
 				// 发送信息
-				uni.request({
-					url: `http://localhost:3000/web/api/sendMessage`,
-					method: 'POST',
-					header:{
-						Authorization:uni.getStorageSync('token') ? JSON.parse(uni.getStorageSync('token')) : ''
-					},
-					data:{
-						userId:this.userId,
-						friendId:this.friendId,
-						message:value,
-						type:0
-					},
-					success: (res) => {
-						if(res.data.code === 200){
-							this.getMessageInfo()
-						}else if(res.data.code === 401){
-							this.$refs.uToast.show({
-								type: 'error',
-								message: res.data.message,
-								icon:false
-							},)
-							setTimeout(()=>{
-								uni.redirectTo({
-									url:'/pages/login/login'
-								})
-							},2000)
-						}else{
-							this.$refs.uToast.show({
-								type: 'error',
-								message: res.data.message,
-								icon:false
-							},)
+				this.socket.emit('userMessage', data)
+			},
+			// 接收消息(1.接收自己发送的信息 2.接收好友信息)-socket
+			receiveSocketMessage() {
+				this.socket.on('userMessage',(data) => {
+					// 时间间隔处理:justNow代表刚刚发的信息
+					// 判断信息列表最后一条的时间与当前信息的时间间隔是否是1分钟内
+					if(this.chatData.length){
+						const lastChat = this.chatData[this.chatData.length - 1]
+						let nowTime = new Date()
+						let time = spacTime(lastChat.moment, data.moment)
+						if(!time){
+							// 间隔不大于1分钟
+							data.justNow = true
 						}
-					},
-					fail: (err) => {
-						console.log('err',err);
 					}
+					this.chatData.push(data)
+					this.ToBottom()
 				})
 			}
 		},
@@ -325,11 +313,10 @@
 			const { friendId } = options
 			this.userId = uni.getStorageSync('userId')
 			this.friendId = friendId
-		},
-		onShow(){
 			this.getMessageInfo()
 			this.getFriendInfo()
-		}
+			this.receiveSocketMessage()
+		},
 	}
 </script>
 

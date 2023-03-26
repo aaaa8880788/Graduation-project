@@ -3,17 +3,11 @@
 import Vue from 'vue'
 import App from './App'
 import uView from '@/uni_modules/uview-ui'
-// import io from './utils/weapp.socket.io.js'	// 通信模块
-import { io } from "socket.io-client/dist/socket.io";
-Vue.config.productionTip = false
-// Vue.prototype.serverUrl = 'http://localhost:3000'		// 后端API baseUrl
-Vue.prototype.socket = io('ws://localhost:3001',{
-	cors: {
-	    origin: '*',
-			}
-})
-console.log('----',io('ws://localhost:3001'));
+import socket from './plugins/socket.js'
 
+Vue.config.productionTip = false
+
+socket(Vue)
 Vue.use(uView)
 App.mpType = 'app'
 
