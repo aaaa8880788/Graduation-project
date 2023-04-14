@@ -36,7 +36,8 @@
       <!-- 发货状态栏 -->
       <template #status="scope">
         <el-tag v-if="scope.row.status === 0" type="danger">未发货</el-tag>
-        <el-tag v-else type="primary">已发货</el-tag>
+        <el-tag v-else-if="scope.row.status === 1" type="primary">已发货</el-tag>
+        <el-tag v-else type="primary">已完成</el-tag>
       </template>
       <!-- 发货状态栏 -->
       <!-- 时间列 -->

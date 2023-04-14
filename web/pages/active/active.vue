@@ -80,7 +80,7 @@
 			},
 			navRightHandle(){
 				if(this.myInfoData && this.myInfoData.powerId.length){
-					const isCanAdd = this.myInfoData.powerId.some(item => item.powerName === 'add')
+					const isCanAdd = this.myInfoData.powerId.some(item => item.powerName === 'publish')
 					if(isCanAdd){
 						uni.navigateTo({
 							url:'/pages/activePublish/activePublish'

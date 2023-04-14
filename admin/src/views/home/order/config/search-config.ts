@@ -8,7 +8,8 @@ const searchFormConfig: IForm = {
       placeholder: '请选择发货状态',
       options: [
         { label: '未发货', value: 0, key:0 },
-        { label: '已发货', value: 1, key:1 }
+        { label: '已发货', value: 1, key:1 },
+        { label: '已完成', value: 2, key: 2 }
       ]
     },
     {

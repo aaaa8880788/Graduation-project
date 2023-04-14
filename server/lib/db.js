@@ -496,7 +496,7 @@ const powerData = [
   {
     name: "active",
     type: 0,
-    powerName: "add",
+    powerName: "publish",
     moment:new Date().getTime()
   }
 ]
@@ -665,7 +665,7 @@ let orders = `create table if not exists orders(
   userId INT NOT NULL COMMENT '兑换用户id',
   giftId INT NOT NULL COMMENT '兑换商品Id',
   score INT NOT NULL COMMENT '订单金额',
-  status INT NOT NULL COMMENT '0未发货1已发货',
+  status INT NOT NULL COMMENT '0未发货1已发货2已完成',
   address varchar(1000) NOT NULL COMMENT '订单地址',
   moment varchar(1000) NOT NULL COMMENT '订单时间',
   PRIMARY KEY (id) 

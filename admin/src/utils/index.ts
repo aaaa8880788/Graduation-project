@@ -65,6 +65,9 @@ export function transFormPowerName(powerName:string){
     case 'power':
       str = '权限'
       break;
+    case 'publish':
+      str = '发布'
+      break;
   }
   return str
 }

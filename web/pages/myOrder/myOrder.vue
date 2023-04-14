@@ -20,8 +20,11 @@
 							<template v-if="item.status === 0">
 								<text>未发货</text>
 							</template>
-							<template v-else>
+							<template v-else-if="item.status === 1">
 								<text>已发货</text>
+							</template>
+							<template v-else>
+								<text>已完成</text>
 							</template>
 						</view>
 					</view>
